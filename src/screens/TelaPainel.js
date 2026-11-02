@@ -1,7 +1,6 @@
 import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
 
-// Dados de exemplo, só para ver a lista funcionando.
-// Depois serão trocados pelos itens que vêm do banco de dados.
+//EXEMPLO (tirar assim que conectar com o banco de dados)
 const ITENS_ABAIXO_DO_MINIMO = [
   { codigo: '7891000100103', nome: 'Farinha de trigo', quantidade: 3, unidade: 'kg', minimo: 10 },
   { codigo: '7891000200201', nome: 'Fermento biológico', quantidade: 2, unidade: 'un', minimo: 6 },
