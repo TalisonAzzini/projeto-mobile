@@ -36,3 +36,16 @@ export function dataValida(texto) {
 export function telefoneValido(texto) {
   return somenteNumeros(texto).length >= 10;
 }
+
+// Formata a quantidade, com vírgula como separador decimal.
+export function formatarQuantidade(texto) {
+  const limpo = texto.replace(/[^\d.,]/g, '').replace(/\./g, ',');
+  const [inteira, ...resto] = limpo.split(',');
+  return resto.length ? `${inteira},${resto.join('')}` : inteira;
+}
+ 
+// Converte a quantidade para número. Se não for um número válido, retorna 0.
+export function paraNumero(texto) {
+  const numero = Number(texto.replace(',', '.'));
+  return Number.isNaN(numero) ? 0 : numero;
+}
