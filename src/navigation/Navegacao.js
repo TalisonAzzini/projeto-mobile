@@ -1,4 +1,4 @@
-import { Pressable, Text } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -43,6 +43,14 @@ function NavegacaoAbas() {
   const { usuario, sair } = useUsuario();
   const ehDono = usuario?.perfil === "dono";
 
+  async function encerrarSessao() {
+    try {
+      await sair();
+    } catch (error) {
+      Alert.alert("Não foi possível sair", error.message);
+    }
+  }
+
   return (
     <Abas.Navigator
       screenOptions={({ route }) => ({
@@ -58,7 +66,7 @@ function NavegacaoAbas() {
         component={TelaPainel}
         options={{
           headerRight: () => (
-            <BotaoCabecalho texto="Sair" aoPressionar={sair} />
+            <BotaoCabecalho texto="Sair" aoPressionar={encerrarSessao} />
           ),
         }}
       />
@@ -86,8 +94,12 @@ function NavegacaoAbas() {
 }
 
 export default function Navegacao() {
-  const { usuario } = useUsuario();
+  const { usuario, carregando } = useUsuario();
   const ehDono = usuario?.perfil === "dono";
+
+  if (carregando) {
+    return <ActivityIndicator style={{ flex: 1 }} color="#0F766E" />;
+  }
 
   return (
     <NavigationContainer>

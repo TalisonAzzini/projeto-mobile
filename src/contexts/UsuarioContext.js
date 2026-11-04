@@ -1,24 +1,40 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "../services/supabase";
+import { mapearUsuario } from "../services/autenticacao";
 
 // Guarda quem está logado e deixa qualquer tela consultar ou mudar isso.
 const UsuarioContext = createContext(null);
 
 export function UsuarioProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
+  const [carregando, setCarregando] = useState(true);
 
-  // PROVISÓRIO (parte do front): entra direto como dono, sem conferir senha.
-  // Quem fizer o login de verdade troca o conteúdo desta função pela chamada ao auth.js.
-  // Para testar o visual do funcionário, troque 'dono' por 'funcionario'.
-  function entrar() {
-    setUsuario({ nome: "Usuário de teste", perfil: "dono" });
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+      setUsuario(mapearUsuario(sessao?.user));
+      setCarregando(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  function entrar(usuarioAutenticado) {
+    setUsuario(usuarioAutenticado);
   }
 
-  function sair() {
+  async function sair() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+
     setUsuario(null);
   }
 
   return (
-    <UsuarioContext.Provider value={{ usuario, entrar, sair }}>
+    <UsuarioContext.Provider value={{ usuario, carregando, entrar, sair }}>
       {children}
     </UsuarioContext.Provider>
   );

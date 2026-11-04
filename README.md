@@ -30,7 +30,7 @@ O app mostra o que está em falta, registra entradas e saídas de itens (com lei
 - React Native (JavaScript) com **Expo SDK 58**
 - React Navigation (pilha e abas)
 - `expo-camera` (leitura de código de barras)
-- Firebase Realtime Database, acessado com `fetch` (previsto)
+- Supabase Auth para autenticação por e-mail e senha
 - Jest, para os testes unitários (a configurar)
 
 ## Como rodar
@@ -49,6 +49,18 @@ cd projeto-mobile
 npm install
 npx expo start
 ```
+
+### Configuração do login
+
+O cliente Supabase está configurado em `src/services/supabase.js`. Crie as contas
+no Supabase Auth e defina o campo `perfil` nos metadados administrativos
+(`app_metadata`) como `dono` ou `funcionario`. Contas sem perfil de dono entram
+com permissões de funcionário.
+
+Para exigir confirmação de e-mail, habilite **Confirm email** nas configurações
+de autenticação do projeto Supabase antes de criar as contas. Quando o login
+retornar que o e-mail ainda não foi confirmado, a tela permite reenviar a
+mensagem de confirmação.
 
 ## Estrutura de pastas
 
@@ -109,7 +121,7 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação
 
 **Pendente (lógica)**
 
-- [ ] Login real e criptografia (hash e salt) das senhas
+- [x] Login real com Supabase Auth (hash e salt das senhas são gerenciados pelo Supabase)
 - [ ] Cadastro de funcionários de verdade
 - [ ] Integração com o banco: listar, buscar, salvar e inativar itens
 - [ ] Registrar entradas e saídas e gravar o histórico
