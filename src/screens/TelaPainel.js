@@ -1,4 +1,11 @@
-import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
 import { useUsuario } from "../contexts/UsuarioContext";
 
 //EXEMPLO (tirar assim que conectar com o banco de dados)
@@ -28,7 +35,9 @@ const ITENS_ABAIXO_DO_MINIMO = [
 
 export default function TelaPainel({ navigation }) {
   const { usuario } = useUsuario();
+  const { width } = useWindowDimensions();
   const ehDono = usuario?.perfil === "dono";
+  const cartaoVertical = width < 480;
 
   return (
     <View style={estilos.container}>
@@ -38,8 +47,13 @@ export default function TelaPainel({ navigation }) {
         data={ITENS_ABAIXO_DO_MINIMO}
         keyExtractor={(item) => item.codigo}
         renderItem={({ item }) => (
-          <View style={estilos.cartao}>
-            <View>
+          <View
+            style={[
+              estilos.cartao,
+              cartaoVertical ? estilos.cartaoVertical : estilos.cartaoHorizontal,
+            ]}
+          >
+            <View style={estilos.informacoes}>
               <Text style={estilos.nome}>{item.nome}</Text>
               <Text style={estilos.detalhe}>
                 {item.quantidade} {item.unidade} · mín. {item.minimo}{" "}
@@ -48,7 +62,14 @@ export default function TelaPainel({ navigation }) {
             </View>
 
             {ehDono && (
-              <Pressable style={estilos.botao}>
+              <Pressable
+                style={[
+                  estilos.botao,
+                  cartaoVertical
+                    ? estilos.botaoVertical
+                    : estilos.botaoHorizontal,
+                ]}
+              >
                 <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
               </Pressable>
             )}
@@ -82,9 +103,6 @@ const estilos = StyleSheet.create({
     marginBottom: 12,
   },
   cartao: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
     borderColor: "#D9DEE5",
@@ -92,8 +110,21 @@ const estilos = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
+  cartaoHorizontal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  cartaoVertical: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  informacoes: {
+    flexShrink: 1,
+  },
   nome: {
     fontSize: 16,
+    flexShrink: 1,
   },
   detalhe: {
     fontSize: 13,
@@ -107,11 +138,21 @@ const estilos = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
+    alignItems: "center",
+  },
+  botaoHorizontal: {
+    marginLeft: 12,
+    flexShrink: 1,
+  },
+  botaoVertical: {
+    marginTop: 12,
   },
   textoBotao: {
     color: "#0F766E",
     fontSize: 14,
     fontWeight: "600",
+    flexShrink: 1,
+    textAlign: "center",
   },
   botaoUsuarios: {
     height: 48,

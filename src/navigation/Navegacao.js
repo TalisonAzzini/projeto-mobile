@@ -1,4 +1,4 @@
-import { Pressable, Text } from "react-native";
+import { ActivityIndicator, Alert, Pressable, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -43,6 +43,14 @@ function NavegacaoAbas() {
   const { usuario, sair } = useUsuario();
   const ehDono = usuario?.perfil === "dono";
 
+  async function encerrarSessao() {
+    try {
+      await sair();
+    } catch (error) {
+      Alert.alert("Erro ao sair", error.message);
+    }
+  }
+
   return (
     <Abas.Navigator
       screenOptions={({ route }) => ({
@@ -58,8 +66,9 @@ function NavegacaoAbas() {
         component={TelaPainel}
         options={{
           headerRight: () => (
-            <BotaoCabecalho texto="Sair" aoPressionar={sair} />
+            <BotaoCabecalho texto="Sair" aoPressionar={encerrarSessao} />
           ),
+          headerRightContainerStyle: { paddingRight: 12 },
         }}
       />
       <Abas.Screen
@@ -86,47 +95,53 @@ function NavegacaoAbas() {
 }
 
 export default function Navegacao() {
-  const { usuario } = useUsuario();
+  const { usuario, carregando } = useUsuario();
   const ehDono = usuario?.perfil === "dono";
 
   return (
     <NavigationContainer>
-      <Pilha.Navigator screenOptions={OPCOES_CABECALHO}>
-        {usuario ? (
-          <>
+      {carregando ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <ActivityIndicator size="large" color="#0F766E" />
+        </View>
+      ) : (
+        <Pilha.Navigator screenOptions={OPCOES_CABECALHO}>
+          {usuario ? (
+            <>
+              <Pilha.Screen
+                name="Abas"
+                component={NavegacaoAbas}
+                options={{ headerShown: false }}
+              />
+              <Pilha.Screen
+                name="Item"
+                component={TelaItem}
+                options={({ route }) => ({
+                  title: route.params?.item ? "Item" : "Novo item",
+                })}
+              />
+              <Pilha.Screen
+                name="Scanner"
+                component={TelaScanner}
+                options={{ title: "Ler código" }}
+              />
+              {ehDono && (
+                <Pilha.Screen
+                  name="Usuarios"
+                  component={TelaUsuarios}
+                  options={{ title: "Usuários" }}
+                />
+              )}
+            </>
+          ) : (
             <Pilha.Screen
-              name="Abas"
-              component={NavegacaoAbas}
+              name="Login"
+              component={TelaLogin}
               options={{ headerShown: false }}
             />
-            <Pilha.Screen
-              name="Item"
-              component={TelaItem}
-              options={({ route }) => ({
-                title: route.params?.item ? "Item" : "Novo item",
-              })}
-            />
-            <Pilha.Screen
-              name="Scanner"
-              component={TelaScanner}
-              options={{ title: "Ler código" }}
-            />
-            {ehDono && (
-              <Pilha.Screen
-                name="Usuarios"
-                component={TelaUsuarios}
-                options={{ title: "Usuários" }}
-              />
-            )}
-          </>
-        ) : (
-          <Pilha.Screen
-            name="Login"
-            component={TelaLogin}
-            options={{ headerShown: false }}
-          />
-        )}
-      </Pilha.Navigator>
+          )}
+        </Pilha.Navigator>
+      )}
     </NavigationContainer>
   );
 }

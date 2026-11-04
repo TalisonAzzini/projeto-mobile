@@ -1,11 +1,30 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useState } from "react";
 import { useUsuario } from "../contexts/UsuarioContext";
 
 export default function TelaLogin() {
-  const { entrar } = useUsuario();
+  const { entrar, erro, limparErro } = useUsuario();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const podeEntrar = email.trim().length > 0 && senha.length > 0 && !enviando;
+
+  async function realizarLogin() {
+    if (!podeEntrar) return;
+    setEnviando(true);
+    try {
+      await entrar(email, senha);
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <View style={estilos.container}>
@@ -16,21 +35,44 @@ export default function TelaLogin() {
       <TextInput
         style={estilos.campo}
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(valor) => {
+          setEmail(valor);
+          limparErro();
+        }}
         keyboardType="email-address"
         autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        returnKeyType="next"
       />
 
       <Text style={estilos.rotulo}>Senha</Text>
       <TextInput
         style={estilos.campo}
         value={senha}
-        onChangeText={setSenha}
+        onChangeText={(valor) => {
+          setSenha(valor);
+          limparErro();
+        }}
         secureTextEntry
+        autoCapitalize="none"
+        autoComplete="password"
+        returnKeyType="done"
+        onSubmitEditing={realizarLogin}
       />
 
-      <Pressable style={estilos.botao} onPress={entrar}>
-        <Text style={estilos.textoBotao}>Entrar</Text>
+      {!!erro && <Text style={estilos.erro}>{erro}</Text>}
+
+      <Pressable
+        style={[estilos.botao, !podeEntrar && estilos.botaoDesativado]}
+        onPress={realizarLogin}
+        disabled={!podeEntrar}
+      >
+        {enviando ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={estilos.textoBotao}>Entrar</Text>
+        )}
       </Pressable>
     </View>
   );
@@ -77,5 +119,13 @@ const estilos = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+  },
+  erro: {
+    color: "#B42318",
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  botaoDesativado: {
+    backgroundColor: "#A0A8B3",
   },
 });
