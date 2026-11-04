@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import Campo from "../components/Campo";
 
-// EXEMPLO (substituir depois por dados do banco de dados)
+// EXEMPLO: substituir depois por uma chamada a API para buscar os funcionários cadastrados
 const FUNCIONARIOS = [
   { id: "1", nome: "Maria Souza", email: "maria@exemplo.com" },
   { id: "2", nome: "João Lima", email: "joao@exemplo.com" },
@@ -15,7 +15,7 @@ export default function TelaUsuarios() {
     setForm({ ...form, [campo]: valor });
   }
 
-  const emailValido = /\S+@\S+\.\S+/.test(form.email);
+  const emailValido = /^\S+@\S+\.\S+$/.test(form.email);
   const senhaCurta = form.senha.length > 0 && form.senha.length < 6;
   const podeCadastrar =
     form.nome.trim() !== "" && emailValido && form.senha.length >= 6;

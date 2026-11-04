@@ -2,7 +2,7 @@ import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Linking } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
-export default function TelaScanner() {
+export default function TelaScanner({ navigation }) {
   const [permissao, pedirPermissao] = useCameraPermissions();
   const [codigo, setCodigo] = useState("");
 
@@ -52,8 +52,22 @@ export default function TelaScanner() {
           <View style={estilos.resultado}>
             <Text style={estilos.rotulo}>Código lido</Text>
             <Text style={estilos.codigo}>{codigo}</Text>
-            <Pressable style={estilos.botao} onPress={() => setCodigo("")}>
-              <Text style={estilos.textoBotao}>Ler outro código</Text>
+            <Pressable
+              style={estilos.botao}
+              onPress={() =>
+                navigation.navigate("Abas", {
+                  screen: "Movimentacao",
+                  params: { codigo },
+                })
+              }
+            >
+              <Text style={estilos.textoBotao}>Usar este código</Text>
+            </Pressable>
+            <Pressable
+              style={estilos.botaoSecundario}
+              onPress={() => setCodigo("")}
+            >
+              <Text style={estilos.textoSecundario}>Ler outro código</Text>
             </Pressable>
           </View>
         ) : (
@@ -137,6 +151,21 @@ const estilos = StyleSheet.create({
   },
   textoBotao: {
     color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  botaoSecundario: {
+    height: 48,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0F766E",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  textoSecundario: {
+    color: "#0F766E",
     fontSize: 16,
     fontWeight: "600",
   },

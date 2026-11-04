@@ -1,47 +1,68 @@
-import { useState } from 'react';
-import { ScrollView, View, Text, Pressable, StyleSheet } from 'react-native';
-import Campo from '../components/Campo';
-import { formatarQuantidade, paraNumero } from '../utils/formatadores';
+import { useState } from "react";
+import { ScrollView, View, Text, Pressable, StyleSheet } from "react-native";
+import Campo from "../components/Campo";
+import { formatarQuantidade, paraNumero } from "../utils/formatadores";
 
 // EXEMPLO (substituir futuramente pelos dados vindo do banco de dados)
-const ITEM = { nome: 'Farinha de trigo', quantidade: 3, unidade: 'kg' };
+const ITEM = { nome: "Farinha de trigo", quantidade: 3, unidade: "kg" };
 
-export default function TelaMovimentacao() {
-  const [tipo, setTipo] = useState('entrada');
-  const [quantidade, setQuantidade] = useState('');
+export default function TelaMovimentacao({ navigation, route }) {
+  const codigoLido = route.params?.codigo;
+
+  const [tipo, setTipo] = useState("entrada");
+  const [quantidade, setQuantidade] = useState("");
 
   const valor = paraNumero(quantidade);
-  const saidaMaiorQueEstoque = tipo === 'saida' && valor > ITEM.quantidade;
-  const novoSaldo = tipo === 'entrada' ? ITEM.quantidade + valor : ITEM.quantidade - valor;
+  const saidaMaiorQueEstoque = tipo === "saida" && valor > ITEM.quantidade;
+  const novoSaldo =
+    tipo === "entrada" ? ITEM.quantidade + valor : ITEM.quantidade - valor;
   const saldoTexto = saidaMaiorQueEstoque
-    ? '—'
-    : String(Math.round(novoSaldo * 1000) / 1000).replace('.', ',');
+    ? "—"
+    : String(Math.round(novoSaldo * 1000) / 1000).replace(".", ",");
   const podeConfirmar = valor > 0 && !saidaMaiorQueEstoque;
 
   return (
-    <ScrollView contentContainerStyle={estilos.container} keyboardShouldPersistTaps="handled">
-      <Text style={estilos.titulo}>Movimentação</Text>
-
+    <ScrollView
+      contentContainerStyle={estilos.container}
+      keyboardShouldPersistTaps="handled"
+    >
       <Campo rotulo="Item" value={ITEM.nome} editable={false} />
 
-      <Pressable style={estilos.botaoSecundario}>
+      <Pressable
+        style={estilos.botaoSecundario}
+        onPress={() => navigation.navigate("Scanner")}
+      >
         <Text style={estilos.textoSecundario}>Ler código de barras</Text>
       </Pressable>
 
+      {codigoLido ? (
+        <Text style={estilos.codigoLido}>Último código lido: {codigoLido}</Text>
+      ) : null}
+
       <View style={estilos.opcoes}>
         <Pressable
-          style={[estilos.opcao, tipo === 'entrada' && estilos.opcaoAtiva]}
-          onPress={() => setTipo('entrada')}
+          style={[estilos.opcao, tipo === "entrada" && estilos.opcaoAtiva]}
+          onPress={() => setTipo("entrada")}
         >
-          <Text style={[estilos.textoOpcao, tipo === 'entrada' && estilos.textoOpcaoAtiva]}>
+          <Text
+            style={[
+              estilos.textoOpcao,
+              tipo === "entrada" && estilos.textoOpcaoAtiva,
+            ]}
+          >
             Entrada
           </Text>
         </Pressable>
         <Pressable
-          style={[estilos.opcao, tipo === 'saida' && estilos.opcaoAtiva]}
-          onPress={() => setTipo('saida')}
+          style={[estilos.opcao, tipo === "saida" && estilos.opcaoAtiva]}
+          onPress={() => setTipo("saida")}
         >
-          <Text style={[estilos.textoOpcao, tipo === 'saida' && estilos.textoOpcaoAtiva]}>
+          <Text
+            style={[
+              estilos.textoOpcao,
+              tipo === "saida" && estilos.textoOpcaoAtiva,
+            ]}
+          >
             Saída
           </Text>
         </Pressable>
@@ -59,20 +80,25 @@ export default function TelaMovimentacao() {
           Em estoque: {ITEM.quantidade} {ITEM.unidade}
         </Text>
         <Text style={estilos.resumoDetalhe}>
-          Novo saldo: {saldoTexto} {saidaMaiorQueEstoque ? '' : ITEM.unidade}
+          Novo saldo: {saldoTexto} {saidaMaiorQueEstoque ? "" : ITEM.unidade}
         </Text>
       </View>
 
       {saidaMaiorQueEstoque && (
-        <Text style={estilos.erro}>A saída é maior que o estoque disponível.</Text>
+        <Text style={estilos.erro}>
+          A saída é maior que o estoque disponível.
+        </Text>
       )}
 
       <Pressable
-        style={[estilos.botaoPrincipal, !podeConfirmar && estilos.botaoDesativado]}
+        style={[
+          estilos.botaoPrincipal,
+          !podeConfirmar && estilos.botaoDesativado,
+        ]}
         disabled={!podeConfirmar}
       >
         <Text style={estilos.textoPrincipal}>
-          Confirmar {tipo === 'entrada' ? 'entrada' : 'saída'}
+          Confirmar {tipo === "entrada" ? "entrada" : "saída"}
         </Text>
       </Pressable>
     </ScrollView>
@@ -81,33 +107,33 @@ export default function TelaMovimentacao() {
 
 const estilos = StyleSheet.create({
   container: {
-    paddingTop: 56,
+    paddingTop: 16,
     paddingHorizontal: 20,
     paddingBottom: 32,
-    backgroundColor: '#F6F7F9',
+    backgroundColor: "#F6F7F9",
   },
-  titulo: {
-    fontSize: 22,
-    fontWeight: 'bold',
+  codigoLido: {
+    fontSize: 13,
+    color: "#4A5563",
     marginBottom: 16,
   },
   botaoSecundario: {
     height: 48,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#0F766E',
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#0F766E",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
   },
   textoSecundario: {
-    color: '#0F766E',
+    color: "#0F766E",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   opcoes: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
     marginBottom: 16,
   },
@@ -116,26 +142,26 @@ const estilos = StyleSheet.create({
     height: 48,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#0F766E',
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#0F766E",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   opcaoAtiva: {
-    backgroundColor: '#0F766E',
+    backgroundColor: "#0F766E",
   },
   textoOpcao: {
-    color: '#0F766E',
+    color: "#0F766E",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   textoOpcaoAtiva: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   resumo: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#D9DEE5',
+    borderColor: "#D9DEE5",
     borderRadius: 8,
     padding: 14,
     marginBottom: 16,
@@ -145,27 +171,27 @@ const estilos = StyleSheet.create({
   },
   resumoDetalhe: {
     fontSize: 13,
-    color: '#4A5563',
+    color: "#4A5563",
     marginTop: 2,
   },
   erro: {
-    color: '#B42318',
+    color: "#B42318",
     fontSize: 14,
     marginBottom: 16,
   },
   botaoPrincipal: {
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#0F766E',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0F766E",
+    justifyContent: "center",
+    alignItems: "center",
   },
   botaoDesativado: {
     opacity: 0.4,
   },
   textoPrincipal: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
