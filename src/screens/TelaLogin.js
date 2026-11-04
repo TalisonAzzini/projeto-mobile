@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Pressable, StyleSheet } from "react-native";
 import { useState } from "react";
 import { useUsuario } from "../contexts/UsuarioContext";
+import TelaComTeclado from "../components/TelaComTeclado";
 
 export default function TelaLogin() {
   const { entrar } = useUsuario();
@@ -8,6 +9,7 @@ export default function TelaLogin() {
   const [senha, setSenha] = useState("");
 
   return (
+    <TelaComTeclado>
     <View style={estilos.container}>
       <Text style={estilos.titulo}>Estoque da Padaria</Text>
       <Text style={estilos.subtitulo}>Entre com a sua conta</Text>
@@ -33,6 +35,7 @@ export default function TelaLogin() {
         <Text style={estilos.textoBotao}>Entrar</Text>
       </Pressable>
     </View>
+    </TelaComTeclado>
   );
 }
 
