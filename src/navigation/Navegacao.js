@@ -1,3 +1,4 @@
+import { Pressable, Text } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -15,31 +16,70 @@ import TelaUsuarios from "../screens/TelaUsuarios";
 const Pilha = createNativeStackNavigator();
 const Abas = createBottomTabNavigator();
 
-// Ícone de cada aba (nome do ícone na biblioteca Ionicons)
+const OPCOES_CABECALHO = {
+  headerStyle: { backgroundColor: "#F6F7F9" },
+  headerShadowVisible: false,
+  headerTintColor: "#0F766E",
+  headerTitleStyle: { color: "#1B2430", fontWeight: "bold" },
+};
+
 const ICONES = {
   Painel: "grid-outline",
   Estoque: "cube-outline",
   Movimentacao: "swap-vertical-outline",
 };
 
-// As três abas de baixo
+function BotaoCabecalho({ texto, aoPressionar }) {
+  return (
+    <Pressable onPress={aoPressionar} hitSlop={8}>
+      <Text style={{ color: "#0F766E", fontSize: 16, fontWeight: "600" }}>
+        {texto}
+      </Text>
+    </Pressable>
+  );
+}
+
 function NavegacaoAbas() {
+  const { usuario, sair } = useUsuario();
+  const ehDono = usuario?.perfil === "dono";
+
   return (
     <Abas.Navigator
       screenOptions={({ route }) => ({
-        headerShown: false,
+        ...OPCOES_CABECALHO,
         tabBarActiveTintColor: "#0F766E",
         tabBarIcon: ({ color, size }) => (
           <Ionicons name={ICONES[route.name]} size={size} color={color} />
         ),
       })}
     >
-      <Abas.Screen name="Painel" component={TelaPainel} />
-      <Abas.Screen name="Estoque" component={TelaEstoque} />
+      <Abas.Screen
+        name="Painel"
+        component={TelaPainel}
+        options={{
+          headerRight: () => (
+            <BotaoCabecalho texto="Sair" aoPressionar={sair} />
+          ),
+        }}
+      />
+      <Abas.Screen
+        name="Estoque"
+        component={TelaEstoque}
+        options={({ navigation }) => ({
+          headerRight: ehDono
+            ? () => (
+                <BotaoCabecalho
+                  texto="Novo item"
+                  aoPressionar={() => navigation.navigate("Item")}
+                />
+              )
+            : undefined,
+        })}
+      />
       <Abas.Screen
         name="Movimentacao"
         component={TelaMovimentacao}
-        options={{ tabBarLabel: "Movimentação" }}
+        options={{ title: "Movimentação", tabBarLabel: "Movimentação" }}
       />
     </Abas.Navigator>
   );
@@ -51,18 +91,40 @@ export default function Navegacao() {
 
   return (
     <NavigationContainer>
-      <Pilha.Navigator screenOptions={{ headerShown: false }}>
+      <Pilha.Navigator screenOptions={OPCOES_CABECALHO}>
         {usuario ? (
           <>
-            <Pilha.Screen name="Abas" component={NavegacaoAbas} />
-            <Pilha.Screen name="Item" component={TelaItem} />
-            <Pilha.Screen name="Scanner" component={TelaScanner} />
+            <Pilha.Screen
+              name="Abas"
+              component={NavegacaoAbas}
+              options={{ headerShown: false }}
+            />
+            <Pilha.Screen
+              name="Item"
+              component={TelaItem}
+              options={({ route }) => ({
+                title: route.params?.item ? "Item" : "Novo item",
+              })}
+            />
+            <Pilha.Screen
+              name="Scanner"
+              component={TelaScanner}
+              options={{ title: "Ler código" }}
+            />
             {ehDono && (
-              <Pilha.Screen name="Usuarios" component={TelaUsuarios} />
+              <Pilha.Screen
+                name="Usuarios"
+                component={TelaUsuarios}
+                options={{ title: "Usuários" }}
+              />
             )}
           </>
         ) : (
-          <Pilha.Screen name="Login" component={TelaLogin} />
+          <Pilha.Screen
+            name="Login"
+            component={TelaLogin}
+            options={{ headerShown: false }}
+          />
         )}
       </Pilha.Navigator>
     </NavigationContainer>
