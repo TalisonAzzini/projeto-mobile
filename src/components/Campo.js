@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { useTema } from "../contexts/TemaContext";
 
-export default function Campo({ rotulo, ...resto }) {
+export default function Campo({ rotulo, onFocus, ...resto }) {
   const { temaEscuro } = useTema();
+  const campoRef = useRef(null);
 
   return (
     <View style={estilos.grupo}>
@@ -10,6 +12,8 @@ export default function Campo({ rotulo, ...resto }) {
         {rotulo}
       </Text>
       <TextInput
+        ref={campoRef}
+        onFocus={(event) => onFocus?.(campoRef.current, event)}
         style={[
           estilos.campo,
           temaEscuro && estilos.campoEscuro,

@@ -78,6 +78,26 @@ e-mail ainda não foi confirmado, a tela permite reenviar a mensagem.
 O cadastro bloqueia domínios reservados para teste ou exemplo, como `test.com`,
 `teste.com` e `example.com`, mas aceita provedores comuns como Gmail.
 
+### Configuração do estoque
+
+A tela Estoque lê os produtos ativos da tabela `public.produtos`, usando a
+sessão autenticada. Ela mapeia `codigo_barras`, `quantidade_atual`,
+`estoque_minimo` e `telefone_fornecedor` para os nomes usados pela interface.
+O botão **Ver produtos inativos** alterna a lista para produtos com `ativo =
+false`; toque no produto e use **Reativar item** na tela de detalhes para
+defini-lo novamente como ativo. Na lista de inativos, o dono também pode
+selecionar vários produtos e reativá-los em lote pelo botão ao lado do filtro.
+**Ver produtos ativos** retorna ao estoque atual.
+Configure uma policy de leitura para usuários autenticados que possam consultar
+o estoque; a tela mostra em português quando a tabela, as colunas ou a
+permissão de leitura estiverem ausentes.
+
+A tabela `public.produtos` e suas policies devem ser criadas e configuradas
+diretamente no Supabase. A tela de produto permite cadastrar e editar, mas as
+policies de `INSERT` e `UPDATE` precisam autorizar o perfil dono. O botão
+Inativar altera `ativo` para `false` (não exclui o produto), portanto a policy
+de `UPDATE` também deve permitir ao dono fazer essa alteração.
+
 ## Estrutura de pastas
 
 ```
