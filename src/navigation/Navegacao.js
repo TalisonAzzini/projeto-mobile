@@ -22,6 +22,7 @@ import TelaLogin from "../screens/TelaLogin";
 import TelaPainel from "../screens/TelaPainel";
 import TelaEstoque from "../screens/TelaEstoque";
 import TelaMovimentacao from "../screens/TelaMovimentacao";
+import TelaHistorico from "../screens/TelaHistorico";
 import TelaItem from "../screens/TelaItem";
 import TelaScanner from "../screens/TelaScanner";
 import TelaUsuarios from "../screens/TelaUsuarios";
@@ -33,6 +34,7 @@ const ICONES = {
   Painel: "grid-outline",
   Estoque: "cube-outline",
   Movimentacao: "swap-vertical-outline",
+  Historico: "time-outline",
 };
 
 function BotaoTema() {
@@ -184,6 +186,13 @@ function NavegacaoAbas() {
         component={TelaMovimentacao}
         options={{ title: "Movimentação", tabBarLabel: "Movimentação" }}
       />
+      {ehDono && (
+        <Abas.Screen
+          name="Historico"
+          component={TelaHistorico}
+          options={{ title: "Histórico", tabBarLabel: "Histórico" }}
+        />
+      )}
     </Abas.Navigator>
   );
 }
