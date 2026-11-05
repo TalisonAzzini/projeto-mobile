@@ -20,7 +20,7 @@ O app mostra o que está em falta, registra entradas e saídas de itens (com lei
 |                                       | Dono  | Funcionário  |
 | ------------------------------------- | ----- | ------------ |
 | Painel, Estoque e Movimentação        | sim   | sim          |
-| Histórico de movimentações           | sim   | não          |
+| Histórico de movimentações            | sim   | não          |
 | Abrir um item                         | edita | só visualiza |
 | Novo item, Salvar e Inativar          | sim   | não          |
 | Pedir no WhatsApp                     | sim   | não          |
@@ -114,144 +114,6 @@ tem a aba **Histórico**, que consulta os eventos da tabela
 divergentes. O cliente Supabase já é uma dependência do aplicativo; não é
 necessário instalar outro pacote.
 
-Execute o SQL abaixo no editor SQL do Supabase. A função só pode ser executada
-por usuários autenticados e registra o usuário da sessão:
-
-```sql
-ALTER TABLE public.produtos
-    ALTER COLUMN quantidade_atual TYPE NUMERIC(12, 3)
-    USING quantidade_atual::NUMERIC(12, 3);
-
-CREATE TABLE IF NOT EXISTS public.movimentacoes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    produto_id UUID NOT NULL REFERENCES public.produtos(id),
-    usuario_id UUID NOT NULL REFERENCES auth.users(id),
-    tipo_movimentacao VARCHAR(20) NOT NULL
-        CHECK (tipo_movimentacao IN ('ENTRADA', 'SAIDA', 'AJUSTE')),
-    quantidade NUMERIC(12, 3) NOT NULL CHECK (quantidade > 0),
-    observacao TEXT,
-    data_movimentacao TIMESTAMP WITH TIME ZONE NOT NULL
-        DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.movimentacoes ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Dono pode consultar movimentacoes"
-    ON public.movimentacoes;
-CREATE POLICY "Dono pode consultar movimentacoes"
-    ON public.movimentacoes
-    FOR SELECT
-    TO authenticated
-    USING ((auth.jwt() -> 'app_metadata' ->> 'perfil') = 'dono');
-
-ALTER TABLE public.movimentacoes
-    DROP CONSTRAINT IF EXISTS movimentacoes_tipo_movimentacao_check;
-
-ALTER TABLE public.movimentacoes
-    ADD CONSTRAINT movimentacoes_tipo_movimentacao_check
-    CHECK (
-        tipo_movimentacao IN (
-            'ENTRADA',
-            'SAIDA',
-            'AJUSTE',
-            'entrada',
-            'saida',
-            'ajuste'
-        )
-    );
-
-CREATE OR REPLACE FUNCTION public.registrar_movimentacao(
-    p_produto_id UUID,
-    p_tipo TEXT,
-    p_quantidade NUMERIC
-)
-RETURNS NUMERIC
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $$
-DECLARE
-    v_quantidade_atual NUMERIC;
-    v_novo_saldo NUMERIC;
-    v_usuario_id UUID := auth.uid();
-BEGIN
-    IF v_usuario_id IS NULL THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'usuario_nao_autenticado';
-    END IF;
-
-    IF p_tipo IS NULL OR p_tipo NOT IN ('entrada', 'saida') THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'tipo_invalido';
-    END IF;
-
-    IF p_quantidade IS NULL OR p_quantidade <= 0 THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'quantidade_invalida';
-    END IF;
-
-    IF p_quantidade <> round(p_quantidade, 3) THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'quantidade_invalida';
-    END IF;
-
-    SELECT p.quantidade_atual
-    INTO v_quantidade_atual
-    FROM public.produtos AS p
-    WHERE p.id = p_produto_id AND p.ativo = TRUE
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'produto_nao_encontrado';
-    END IF;
-
-    IF v_quantidade_atual IS NULL THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'saldo_invalido';
-    END IF;
-
-    IF p_tipo = 'saida' AND p_quantidade > v_quantidade_atual THEN
-        RAISE EXCEPTION USING ERRCODE = 'P0001', MESSAGE = 'estoque_insuficiente';
-    END IF;
-
-    v_novo_saldo := CASE
-        WHEN p_tipo = 'entrada' THEN v_quantidade_atual + p_quantidade
-        ELSE v_quantidade_atual - p_quantidade
-    END;
-    v_novo_saldo := round(v_novo_saldo, 3);
-
-    UPDATE public.produtos
-    SET quantidade_atual = v_novo_saldo
-    WHERE id = p_produto_id;
-
-    INSERT INTO public.movimentacoes (
-        produto_id,
-        usuario_id,
-        tipo_movimentacao,
-        quantidade,
-        observacao,
-        data_movimentacao
-    )
-    VALUES (
-        p_produto_id,
-        v_usuario_id,
-        upper(p_tipo),
-        p_quantidade,
-        CASE
-            WHEN p_tipo = 'entrada' THEN 'Entrada registrada pelo aplicativo'
-            ELSE 'Saída registrada pelo aplicativo'
-        END,
-        timezone('utc'::text, now())
-    );
-
-    RETURN v_novo_saldo;
-END;
-$$;
-
-REVOKE ALL ON FUNCTION public.registrar_movimentacao(UUID, TEXT, NUMERIC) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.registrar_movimentacao(UUID, TEXT, NUMERIC) TO authenticated;
-```
-
-Garanta que `public.produtos.quantidade_atual` aceite valores decimais caso
-sejam usados produtos medidos em kg ou litro. A função usa a sessão do usuário,
-bloqueia o produto durante o cálculo do saldo e grava a alteração e o histórico
-na mesma transação.
-
 ## Estrutura de pastas
 
 ```
@@ -296,8 +158,8 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 - [x] Uso de `FlatList` (Painel, Estoque e Usuários)
 - [x] Recurso do celular: **câmera** (Scanner)
 - [x] Repositório no GitHub
-- [ ] Login com criptografia da senha
-- [ ] Banco de dados (Firebase)
+- [x] Login com criptografia da senha
+- [x] Banco de dados (Supabase)
 - [ ] 2 testes unitários simples com `fetch`
 
 ## Status
@@ -313,13 +175,13 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 
 - [x] Login real com Supabase Auth (hash e salt das senhas são gerenciados pelo Supabase)
 - [x] Cadastro e listagem de funcionários pelo Supabase (Edge Function; requer implantação)
-- [ ] Integração com o banco: listar, buscar, salvar e inativar itens
+- [x] Integração com o banco: listar, buscar, salvar e inativar itens
 - [x] Registrar entradas e saídas e gravar o histórico (requer configurar a função no Supabase)
 - [x] Achar o item a partir do código lido pelo Scanner na tela Movimentação
 - [x] Botão "Pedir no WhatsApp" (abre o WhatsApp sem direcionar para um contato específico)
-- [ ] Validação ao salvar (data, telefone e quantidades)
+- [x] Validação ao salvar (data, telefone e quantidades)
 - [ ] Testes unitários
-- [ ] Trocar os dados de exemplo das telas por dados do banco
+- [x] Trocar os dados de exemplo das telas por dados do banco
 
 ## Equipe
 
