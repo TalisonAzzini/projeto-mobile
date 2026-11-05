@@ -52,15 +52,31 @@ npx expo start
 
 ### Configuração do login
 
-O cliente Supabase está configurado em `src/services/supabase.js`. Crie as contas
-no Supabase Auth e defina o campo `perfil` nos metadados administrativos
-(`app_metadata`) como `dono` ou `funcionario`. Contas sem perfil de dono entram
-com permissões de funcionário.
+O cliente Supabase está configurado em `src/services/supabase.js` e o SDK
+`@supabase/supabase-js` já faz parte das dependências do aplicativo. Crie a conta
+do dono no Supabase Auth e defina `app_metadata.perfil` como `dono`. O cadastro
+de funcionários é realizado pela Edge Function `gerenciar-usuarios`, que cria
+a conta no Auth e o perfil correspondente em `public.usuarios`. A tela lista
+funcionários diretamente dessa tabela usando a sessão autenticada e RLS.
 
-Para exigir confirmação de e-mail, habilite **Confirm email** nas configurações
-de autenticação do projeto Supabase antes de criar as contas. Quando o login
-retornar que o e-mail ainda não foi confirmado, a tela permite reenviar a
-mensagem de confirmação.
+Para disponibilizar o gerenciamento de funcionários, implante a função no
+projeto Supabase:
+
+```
+supabase login
+supabase link --project-ref juxqoryqcvblsyryvzhr
+supabase functions deploy gerenciar-usuarios
+```
+
+A função exige uma sessão autenticada de dono e usa a chave administrativa
+somente no servidor Supabase; nunca configure a `service_role` no aplicativo.
+O acesso de leitura à tabela deve ser restrito ao dono autenticado; as policies
+de leitura do próprio perfil e do dono já existentes cobrem esse acesso.
+Habilite **Confirm email** nas configurações de autenticação do Supabase para
+que o cadastro envie a confirmação ao funcionário. Se o login informar que o
+e-mail ainda não foi confirmado, a tela permite reenviar a mensagem.
+O cadastro bloqueia domínios reservados para teste ou exemplo, como `test.com`,
+`teste.com` e `example.com`, mas aceita provedores comuns como Gmail.
 
 ## Estrutura de pastas
 
@@ -122,7 +138,7 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação
 **Pendente (lógica)**
 
 - [x] Login real com Supabase Auth (hash e salt das senhas são gerenciados pelo Supabase)
-- [ ] Cadastro de funcionários de verdade
+- [x] Cadastro e listagem de funcionários pelo Supabase (Edge Function; requer implantação)
 - [ ] Integração com o banco: listar, buscar, salvar e inativar itens
 - [ ] Registrar entradas e saídas e gravar o histórico
 - [ ] Achar o item a partir do código lido pelo Scanner

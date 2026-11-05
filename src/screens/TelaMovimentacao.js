@@ -2,11 +2,13 @@ import { useState } from "react";
 import { ScrollView, View, Text, Pressable, StyleSheet } from "react-native";
 import Campo from "../components/Campo";
 import { formatarQuantidade, paraNumero } from "../utils/formatadores";
+import { useTema } from "../contexts/TemaContext";
 
 // EXEMPLO (substituir futuramente pelos dados vindo do banco de dados)
 const ITEM = { nome: "Farinha de trigo", quantidade: 3, unidade: "kg" };
 
 export default function TelaMovimentacao({ navigation, route }) {
+  const { temaEscuro } = useTema();
   const codigoLido = route.params?.codigo;
 
   const [tipo, setTipo] = useState("entrada");
@@ -23,30 +25,43 @@ export default function TelaMovimentacao({ navigation, route }) {
 
   return (
     <ScrollView
-      contentContainerStyle={estilos.container}
+      contentContainerStyle={[
+        estilos.container,
+        temaEscuro && estilos.containerEscuro,
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       <Campo rotulo="Item" value={ITEM.nome} editable={false} />
 
       <Pressable
-        style={estilos.botaoSecundario}
+        style={[
+          estilos.botaoSecundario,
+          temaEscuro && estilos.botaoSecundarioEscuro,
+        ]}
         onPress={() => navigation.navigate("Scanner")}
       >
         <Text style={estilos.textoSecundario}>Ler código de barras</Text>
       </Pressable>
 
       {codigoLido ? (
-        <Text style={estilos.codigoLido}>Último código lido: {codigoLido}</Text>
+        <Text style={[estilos.codigoLido, temaEscuro && estilos.textoSecundarioEscuro]}>
+          Último código lido: {codigoLido}
+        </Text>
       ) : null}
 
       <View style={estilos.opcoes}>
         <Pressable
-          style={[estilos.opcao, tipo === "entrada" && estilos.opcaoAtiva]}
+          style={[
+            estilos.opcao,
+            temaEscuro && estilos.opcaoEscura,
+            tipo === "entrada" && estilos.opcaoAtiva,
+          ]}
           onPress={() => setTipo("entrada")}
         >
           <Text
             style={[
               estilos.textoOpcao,
+              temaEscuro && estilos.textoOpcaoEscuro,
               tipo === "entrada" && estilos.textoOpcaoAtiva,
             ]}
           >
@@ -54,12 +69,17 @@ export default function TelaMovimentacao({ navigation, route }) {
           </Text>
         </Pressable>
         <Pressable
-          style={[estilos.opcao, tipo === "saida" && estilos.opcaoAtiva]}
+          style={[
+            estilos.opcao,
+            temaEscuro && estilos.opcaoEscura,
+            tipo === "saida" && estilos.opcaoAtiva,
+          ]}
           onPress={() => setTipo("saida")}
         >
           <Text
             style={[
               estilos.textoOpcao,
+              temaEscuro && estilos.textoOpcaoEscuro,
               tipo === "saida" && estilos.textoOpcaoAtiva,
             ]}
           >
@@ -75,17 +95,17 @@ export default function TelaMovimentacao({ navigation, route }) {
         keyboardType="decimal-pad"
       />
 
-      <View style={estilos.resumo}>
-        <Text style={estilos.resumoTexto}>
+      <View style={[estilos.resumo, temaEscuro && estilos.resumoEscuro]}>
+        <Text style={[estilos.resumoTexto, temaEscuro && estilos.textoClaro]}>
           Em estoque: {ITEM.quantidade} {ITEM.unidade}
         </Text>
-        <Text style={estilos.resumoDetalhe}>
+        <Text style={[estilos.resumoDetalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
           Novo saldo: {saldoTexto} {saidaMaiorQueEstoque ? "" : ITEM.unidade}
         </Text>
       </View>
 
       {saidaMaiorQueEstoque && (
-        <Text style={estilos.erro}>
+        <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
           A saída é maior que o estoque disponível.
         </Text>
       )}
@@ -112,10 +132,16 @@ const estilos = StyleSheet.create({
     paddingBottom: 32,
     backgroundColor: "#F6F7F9",
   },
+  containerEscuro: {
+    backgroundColor: "#101418",
+  },
   codigoLido: {
     fontSize: 13,
     color: "#4A5563",
     marginBottom: 16,
+  },
+  textoSecundarioEscuro: {
+    color: "#CBD5E1",
   },
   botaoSecundario: {
     height: 48,
@@ -126,6 +152,9 @@ const estilos = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 16,
+  },
+  botaoSecundarioEscuro: {
+    backgroundColor: "#1E2933",
   },
   textoSecundario: {
     color: "#0F766E",
@@ -147,6 +176,9 @@ const estilos = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  opcaoEscura: {
+    backgroundColor: "#1E2933",
+  },
   opcaoAtiva: {
     backgroundColor: "#0F766E",
   },
@@ -154,6 +186,9 @@ const estilos = StyleSheet.create({
     color: "#0F766E",
     fontSize: 16,
     fontWeight: "600",
+  },
+  textoOpcaoEscuro: {
+    color: "#5EEAD4",
   },
   textoOpcaoAtiva: {
     color: "#FFFFFF",
@@ -165,6 +200,13 @@ const estilos = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     marginBottom: 16,
+  },
+  resumoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+  },
+  textoClaro: {
+    color: "#F8FAFC",
   },
   resumoTexto: {
     fontSize: 16,
@@ -178,6 +220,9 @@ const estilos = StyleSheet.create({
     color: "#B42318",
     fontSize: 14,
     marginBottom: 16,
+  },
+  erroEscuro: {
+    color: "#FDA4AF",
   },
   botaoPrincipal: {
     height: 48,

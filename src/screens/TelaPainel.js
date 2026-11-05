@@ -1,5 +1,6 @@
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useUsuario } from "../contexts/UsuarioContext";
+import { useTema } from "../contexts/TemaContext";
 
 //EXEMPLO (tirar assim que conectar com o banco de dados)
 const ITENS_ABAIXO_DO_MINIMO = [
@@ -28,27 +29,32 @@ const ITENS_ABAIXO_DO_MINIMO = [
 
 export default function TelaPainel({ navigation }) {
   const { usuario } = useUsuario();
+  const { temaEscuro } = useTema();
   const ehDono = usuario?.perfil === "dono";
 
   return (
-    <View style={estilos.container}>
-      <Text style={estilos.secao}>Abaixo do mínimo</Text>
+    <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
+      <Text style={[estilos.secao, temaEscuro && estilos.textoSecundarioEscuro]}>
+        Abaixo do mínimo
+      </Text>
 
       <FlatList
         data={ITENS_ABAIXO_DO_MINIMO}
         keyExtractor={(item) => item.codigo}
         renderItem={({ item }) => (
-          <View style={estilos.cartao}>
+          <View style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}>
             <View>
-              <Text style={estilos.nome}>{item.nome}</Text>
-              <Text style={estilos.detalhe}>
+              <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
+                {item.nome}
+              </Text>
+              <Text style={[estilos.detalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
                 {item.quantidade} {item.unidade} · mín. {item.minimo}{" "}
                 {item.unidade}
               </Text>
             </View>
 
             {ehDono && (
-              <Pressable style={estilos.botao}>
+              <Pressable style={[estilos.botao, temaEscuro && estilos.cartaoEscuro]}>
                 <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
               </Pressable>
             )}
@@ -57,7 +63,7 @@ export default function TelaPainel({ navigation }) {
         ListFooterComponent={
           ehDono ? (
             <Pressable
-              style={estilos.botaoUsuarios}
+              style={[estilos.botaoUsuarios, temaEscuro && estilos.cartaoEscuro]}
               onPress={() => navigation.navigate("Usuarios")}
             >
               <Text style={estilos.textoUsuarios}>Usuários</Text>
@@ -76,10 +82,16 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#F6F7F9",
   },
+  containerEscuro: {
+    backgroundColor: "#101418",
+  },
   secao: {
     fontSize: 15,
     color: "#4A5563",
     marginBottom: 12,
+  },
+  textoSecundarioEscuro: {
+    color: "#CBD5E1",
   },
   cartao: {
     flexDirection: "row",
@@ -92,8 +104,15 @@ const estilos = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
+  cartaoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+  },
   nome: {
     fontSize: 16,
+  },
+  textoClaro: {
+    color: "#F8FAFC",
   },
   detalhe: {
     fontSize: 13,

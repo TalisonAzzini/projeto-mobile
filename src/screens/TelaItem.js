@@ -3,9 +3,11 @@ import { ScrollView, Text, Pressable, StyleSheet } from "react-native";
 import Campo from "../components/Campo";
 import { formatarTelefone, formatarData } from "../utils/formatadores";
 import { useUsuario } from "../contexts/UsuarioContext";
+import { useTema } from "../contexts/TemaContext";
 
 export default function TelaItem({ route }) {
   const { usuario } = useUsuario();
+  const { temaEscuro } = useTema();
   const somenteLeitura = usuario?.perfil !== "dono";
 
   const item = route.params?.item;
@@ -27,7 +29,10 @@ export default function TelaItem({ route }) {
 
   return (
     <ScrollView
-      contentContainerStyle={estilos.container}
+      contentContainerStyle={[
+        estilos.container,
+        temaEscuro && estilos.containerEscuro,
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       <Campo
@@ -94,7 +99,12 @@ export default function TelaItem({ route }) {
       )}
       {/* "Inativar" só faz sentido para um item que já existe */}
       {!somenteLeitura && item && (
-        <Pressable style={estilos.botaoSecundario}>
+        <Pressable
+          style={[
+            estilos.botaoSecundario,
+            temaEscuro && estilos.botaoSecundarioEscuro,
+          ]}
+        >
           <Text style={estilos.textoSecundario}>Inativar item</Text>
         </Pressable>
       )}
@@ -108,6 +118,9 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 32,
     backgroundColor: "#F6F7F9",
+  },
+  containerEscuro: {
+    backgroundColor: "#101418",
   },
   botaoPrincipal: {
     height: 48,
@@ -131,6 +144,10 @@ const estilos = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 12,
+  },
+  botaoSecundarioEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#0F766E",
   },
   textoSecundario: {
     color: "#0F766E",

@@ -5,12 +5,12 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
-  useColorScheme,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useUsuario } from "../contexts/UsuarioContext";
+import { useTema } from "../contexts/TemaContext";
 import {
   autenticarUsuario,
   reenviarConfirmacaoEmail,
@@ -18,9 +18,7 @@ import {
 } from "../services/autenticacao";
 
 export default function TelaLogin() {
-  const esquemaSistema = useColorScheme();
-  const [temaManual, setTemaManual] = useState(null);
-  const temaEscuro = temaManual ?? (esquemaSistema === "dark");
+  const { temaEscuro, alternarTema } = useTema();
   const { entrar } = useUsuario();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -78,7 +76,7 @@ export default function TelaLogin() {
           estilos.botaoTema,
           temaEscuro && estilos.botaoTemaEscuro,
         ]}
-        onPress={() => setTemaManual(!temaEscuro)}
+        onPress={alternarTema}
         accessibilityRole="button"
         accessibilityLabel={
           temaEscuro ? "Mudar para tema claro" : "Mudar para tema escuro"

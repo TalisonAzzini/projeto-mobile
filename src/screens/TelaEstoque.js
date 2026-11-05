@@ -7,6 +7,7 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
+import { useTema } from "../contexts/TemaContext";
 
 // DADOS DE XEMPLO, só para ver a lista funcionando. Depois serão trocados pelos itens que vêm do banco de dados.
 const FORNECEDOR = {
@@ -58,6 +59,7 @@ const ITENS = [
 
 export default function TelaEstoque({ navigation }) {
   const [busca, setBusca] = useState("");
+  const { temaEscuro } = useTema();
 
   const itensFiltrados = ITENS.filter(
     (item) =>
@@ -66,31 +68,36 @@ export default function TelaEstoque({ navigation }) {
   );
 
   return (
-    <View style={estilos.container}>
+    <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
       <TextInput
-        style={estilos.busca}
+        style={[estilos.busca, temaEscuro && estilos.campoEscuro]}
         value={busca}
         onChangeText={setBusca}
         placeholder="Buscar item ou código"
+        placeholderTextColor={temaEscuro ? "#94A3B8" : "#6B7280"}
       />
 
       <FlatList
         data={itensFiltrados}
         keyExtractor={(item) => item.codigo}
         ListEmptyComponent={
-          <Text style={estilos.vazio}>Nenhum item encontrado</Text>
+          <Text style={[estilos.vazio, temaEscuro && estilos.textoSecundarioEscuro]}>
+            Nenhum item encontrado
+          </Text>
         }
         renderItem={({ item }) => {
           const abaixoDoMinimo = item.quantidade <= item.minimo;
 
           return (
             <Pressable
-              style={estilos.cartao}
+              style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}
               onPress={() => navigation.navigate("Item", { item })}
             >
               <View>
-                <Text style={estilos.nome}>{item.nome}</Text>
-                <Text style={estilos.detalhe}>
+                <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
+                  {item.nome}
+                </Text>
+                <Text style={[estilos.detalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
                   {item.quantidade} {item.unidade}
                 </Text>
               </View>
@@ -115,6 +122,9 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#F6F7F9",
   },
+  containerEscuro: {
+    backgroundColor: "#101418",
+  },
   busca: {
     height: 48,
     borderWidth: 1,
@@ -124,10 +134,18 @@ const estilos = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     marginBottom: 16,
   },
+  campoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#475569",
+    color: "#F8FAFC",
+  },
   vazio: {
     textAlign: "center",
     color: "#4A5563",
     marginTop: 24,
+  },
+  textoSecundarioEscuro: {
+    color: "#CBD5E1",
   },
   cartao: {
     flexDirection: "row",
@@ -140,8 +158,15 @@ const estilos = StyleSheet.create({
     padding: 14,
     marginBottom: 12,
   },
+  cartaoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+  },
   nome: {
     fontSize: 16,
+  },
+  textoClaro: {
+    color: "#F8FAFC",
   },
   detalhe: {
     fontSize: 13,
