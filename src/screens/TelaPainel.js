@@ -1,54 +1,133 @@
-import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
+import { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Linking,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useUsuario } from "../contexts/UsuarioContext";
+import { useTema } from "../contexts/TemaContext";
+import { listarProdutos } from "../services/produtos";
 
-//EXEMPLO (tirar assim que conectar com o banco de dados)
-const ITENS_ABAIXO_DO_MINIMO = [
-  {
-    codigo: "7891000100103",
-    nome: "Farinha de trigo",
-    quantidade: 3,
-    unidade: "kg",
-    minimo: 10,
-  },
-  {
-    codigo: "7891000200201",
-    nome: "Fermento biológico",
-    quantidade: 2,
-    unidade: "un",
-    minimo: 6,
-  },
-  {
-    codigo: "7891000300309",
-    nome: "Açúcar refinado",
-    quantidade: 4,
-    unidade: "kg",
-    minimo: 8,
-  },
-];
+function formatarQuantidade(quantidade) {
+  return String(quantidade).replace(".", ",");
+}
 
 export default function TelaPainel({ navigation }) {
   const { usuario } = useUsuario();
+  const { temaEscuro } = useTema();
   const ehDono = usuario?.perfil === "dono";
+  const [produtosBaixos, setProdutosBaixos] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+
+  const carregarProdutos = useCallback(async () => {
+    setCarregando(true);
+    setErro("");
+
+    try {
+      const produtos = await listarProdutos({ ativos: true });
+      setProdutosBaixos(
+        produtos.filter((item) => item.quantidade <= item.minimo),
+      );
+    } catch (error) {
+      setErro(error.message || "Não foi possível carregar o painel.");
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      carregarProdutos();
+    }, [carregarProdutos]),
+  );
+
+  async function abrirWhatsApp() {
+    try {
+      await Linking.openURL("whatsapp://");
+    } catch {
+      try {
+        await Linking.openURL("https://wa.me/");
+      } catch {
+        Alert.alert(
+          "Não foi possível abrir o WhatsApp",
+          "Confira se o WhatsApp está instalado no telefone e tente novamente.",
+        );
+      }
+    }
+  }
 
   return (
-    <View style={estilos.container}>
-      <Text style={estilos.secao}>Abaixo do mínimo</Text>
+    <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
+      <Text style={[estilos.secao, temaEscuro && estilos.textoSecundarioEscuro]}>
+        Abaixo do mínimo
+      </Text>
 
       <FlatList
-        data={ITENS_ABAIXO_DO_MINIMO}
-        keyExtractor={(item) => item.codigo}
+        data={produtosBaixos}
+        keyExtractor={(item) => String(item.id)}
+        refreshing={carregando}
+        onRefresh={carregarProdutos}
+        ListHeaderComponent={
+          erro ? (
+            <View style={estilos.estadoLista}>
+              <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
+                {erro}
+              </Text>
+              <Pressable onPress={carregarProdutos} accessibilityRole="button">
+                <Text style={estilos.textoAcao}>Tentar novamente</Text>
+              </Pressable>
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          carregando ? (
+            <ActivityIndicator
+              style={estilos.carregando}
+              color="#0F766E"
+              accessibilityLabel="Carregando produtos abaixo do mínimo"
+            />
+          ) : erro ? null : (
+            <Text
+              style={[
+                estilos.estadoLista,
+                temaEscuro && estilos.textoSecundarioEscuro,
+              ]}
+            >
+              Nenhum produto está abaixo do estoque mínimo.
+            </Text>
+          )
+        }
         renderItem={({ item }) => (
-          <View style={estilos.cartao}>
-            <View>
-              <Text style={estilos.nome}>{item.nome}</Text>
-              <Text style={estilos.detalhe}>
-                {item.quantidade} {item.unidade} · mín. {item.minimo}{" "}
-                {item.unidade}
+          <View style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}>
+            <View style={estilos.dadosProduto}>
+              <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
+                {item.nome}
+              </Text>
+              <Text
+                style={[
+                  estilos.detalhe,
+                  temaEscuro && estilos.textoSecundarioEscuro,
+                ]}
+              >
+                {formatarQuantidade(item.quantidade)} {item.unidade} · mín.{" "}
+                {formatarQuantidade(item.minimo)} {item.unidade}
               </Text>
             </View>
 
             {ehDono && (
-              <Pressable style={estilos.botao}>
+              <Pressable
+                style={estilos.botao}
+                onPress={abrirWhatsApp}
+                accessibilityRole="button"
+                accessibilityLabel={`Pedir ${item.nome} no WhatsApp do fornecedor`}
+              >
                 <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
               </Pressable>
             )}
@@ -57,8 +136,9 @@ export default function TelaPainel({ navigation }) {
         ListFooterComponent={
           ehDono ? (
             <Pressable
-              style={estilos.botaoUsuarios}
+              style={[estilos.botaoUsuarios, temaEscuro && estilos.cartaoEscuro]}
               onPress={() => navigation.navigate("Usuarios")}
+              accessibilityRole="button"
             >
               <Text style={estilos.textoUsuarios}>Usuários</Text>
             </Pressable>
@@ -76,10 +156,16 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: "#F6F7F9",
   },
+  containerEscuro: {
+    backgroundColor: "#101418",
+  },
   secao: {
     fontSize: 15,
     color: "#4A5563",
     marginBottom: 12,
+  },
+  textoSecundarioEscuro: {
+    color: "#CBD5E1",
   },
   cartao: {
     flexDirection: "row",
@@ -91,26 +177,37 @@ const estilos = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
     marginBottom: 12,
+    gap: 12,
+  },
+  cartaoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+  },
+  dadosProduto: {
+    flex: 1,
+    flexShrink: 1,
   },
   nome: {
     fontSize: 16,
+  },
+  textoClaro: {
+    color: "#F8FAFC",
   },
   detalhe: {
     fontSize: 13,
     color: "#4A5563",
   },
   botao: {
-    height: 40,
+    minHeight: 40,
+    flexShrink: 0,
     paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "#0F766E",
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#25D366",
     justifyContent: "center",
   },
   textoBotao: {
-    color: "#0F766E",
-    fontSize: 14,
+    color: "#FFFFFF",
+    fontSize: 13,
     fontWeight: "600",
   },
   botaoUsuarios: {
@@ -127,5 +224,26 @@ const estilos = StyleSheet.create({
     color: "#0F766E",
     fontSize: 16,
     fontWeight: "600",
+  },
+  carregando: {
+    marginVertical: 24,
+  },
+  estadoLista: {
+    color: "#4A5563",
+    textAlign: "center",
+    paddingVertical: 24,
+  },
+  erro: {
+    color: "#B42318",
+    marginBottom: 12,
+  },
+  erroEscuro: {
+    color: "#FDA4AF",
+  },
+  textoAcao: {
+    color: "#0F766E",
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
