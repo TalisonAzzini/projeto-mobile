@@ -1,10 +1,23 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet, Linking } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import Campo from "../components/Campo";
+import { useTema } from "../contexts/TemaContext";
 
 export default function TelaScanner({ navigation }) {
+  const { temaEscuro } = useTema();
   const [permissao, pedirPermissao] = useCameraPermissions();
   const [codigo, setCodigo] = useState("");
+  const [digitando, setDigitando] = useState(false);
+  const [texto, setTexto] = useState("");
+
+  function usarCodigo(valor) {
+    navigation.navigate("Abas", {
+      screen: "Movimentacao",
+      params: { codigo: valor },
+    });
+  }
+  const codigoDigitado = texto.replace(/\s/g, "");
 
   if (!permissao) {
     return <View style={estilos.container} />;
@@ -39,43 +52,91 @@ export default function TelaScanner({ navigation }) {
         barcodeScannerSettings={{
           barcodeTypes: ["ean13", "ean8", "upc_a", "code128", "qr"],
         }}
-        onBarcodeScanned={codigo ? undefined : ({ data }) => setCodigo(data)}
+        onBarcodeScanned={
+          codigo || digitando ? undefined : ({ data }) => setCodigo(data)
+        }
       />
 
-      <View style={estilos.sobreposicao} pointerEvents="none">
-        <View style={estilos.moldura} />
-        <Text style={estilos.dica}>Aponte para o código de barras</Text>
-      </View>
+      {!digitando && (
+        <View style={estilos.sobreposicao} pointerEvents="none">
+          <View style={estilos.moldura} />
+          <Text style={estilos.dica}>Aponte para o código de barras</Text>
+        </View>
+      )}
 
-      <View style={estilos.rodape}>
-        {codigo ? (
-          <View style={estilos.resultado}>
-            <Text style={estilos.rotulo}>Código lido</Text>
-            <Text style={estilos.codigo}>{codigo}</Text>
-            <Pressable
-              style={estilos.botao}
-              onPress={() =>
-                navigation.navigate("Abas", {
-                  screen: "Movimentacao",
-                  params: { codigo },
-                })
-              }
-            >
-              <Text style={estilos.textoBotao}>Usar este código</Text>
-            </Pressable>
-            <Pressable
-              style={estilos.botaoSecundario}
-              onPress={() => setCodigo("")}
-            >
-              <Text style={estilos.textoSecundario}>Ler outro código</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable style={estilos.botaoContorno}>
-            <Text style={estilos.textoContorno}>Digitar código</Text>
+      {digitando && (
+        <View
+          style={[
+            estilos.painelDigitar,
+            temaEscuro && estilos.painelDigitarEscuro,
+          ]}
+        >
+          <Campo
+            rotulo="Código do item"
+            value={texto}
+            onChangeText={setTexto}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            autoFocus
+          />
+          <Pressable
+            style={[estilos.botao, !codigoDigitado && estilos.botaoDesativado]}
+            disabled={!codigoDigitado}
+            onPress={() => usarCodigo(codigoDigitado)}
+          >
+            <Text style={estilos.textoBotao}>Usar este código</Text>
           </Pressable>
-        )}
-      </View>
+          <Pressable
+            style={[
+              estilos.botaoSecundario,
+              temaEscuro && estilos.botaoSecundarioEscuro,
+            ]}
+            onPress={() => {
+              setDigitando(false);
+              setTexto("");
+            }}
+          >
+            <Text style={estilos.textoSecundario}>Cancelar</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {!digitando && (
+        <View style={estilos.rodape}>
+          {codigo ? (
+            <View style={[estilos.resultado, temaEscuro && estilos.resultadoEscuro]}>
+              <Text style={[estilos.rotulo, temaEscuro && estilos.rotuloEscuro]}>
+                Código lido
+              </Text>
+              <Text style={[estilos.codigo, temaEscuro && estilos.rotuloEscuro]}>
+                {codigo}
+              </Text>
+              <Pressable
+                style={estilos.botao}
+                onPress={() => usarCodigo(codigo)}
+              >
+                <Text style={estilos.textoBotao}>Usar este código</Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  estilos.botaoSecundario,
+                  temaEscuro && estilos.botaoSecundarioEscuro,
+                ]}
+                onPress={() => setCodigo("")}
+              >
+                <Text style={estilos.textoSecundario}>Ler outro código</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              style={estilos.botaoContorno}
+              onPress={() => setDigitando(true)}
+            >
+              <Text style={estilos.textoContorno}>Digitar código</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -120,6 +181,18 @@ const estilos = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
+  painelDigitar: {
+    position: "absolute",
+    top: 16,
+    left: 20,
+    right: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 8,
+    padding: 16,
+  },
+  painelDigitarEscuro: {
+    backgroundColor: "#1E2933",
+  },
   rodape: {
     position: "absolute",
     left: 0,
@@ -133,9 +206,15 @@ const estilos = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
   },
+  resultadoEscuro: {
+    backgroundColor: "#1E2933",
+  },
   rotulo: {
     fontSize: 13,
     color: "#4A5563",
+  },
+  rotuloEscuro: {
+    color: "#F8FAFC",
   },
   codigo: {
     fontSize: 22,
@@ -148,6 +227,9 @@ const estilos = StyleSheet.create({
     backgroundColor: "#0F766E",
     justifyContent: "center",
     alignItems: "center",
+  },
+  botaoDesativado: {
+    opacity: 0.4,
   },
   textoBotao: {
     color: "#FFFFFF",
@@ -163,6 +245,9 @@ const estilos = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 12,
+  },
+  botaoSecundarioEscuro: {
+    backgroundColor: "#1E2933",
   },
   textoSecundario: {
     color: "#0F766E",
