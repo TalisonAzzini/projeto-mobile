@@ -1,7 +1,12 @@
 import { View, Text, FlatList, Pressable, StyleSheet } from "react-native";
 import { useUsuario } from "../contexts/UsuarioContext";
+import { pedirReposicaoNoWhatsApp } from "../services/whatsapp";
 
 //EXEMPLO (tirar assim que conectar com o banco de dados)
+const FORNECEDOR = {
+  fornecedor: "Distribuidora Silva",
+  telefone: "(21) 90000-0000",
+};
 const ITENS_ABAIXO_DO_MINIMO = [
   {
     codigo: "7891000100103",
@@ -9,6 +14,7 @@ const ITENS_ABAIXO_DO_MINIMO = [
     quantidade: 3,
     unidade: "kg",
     minimo: 10,
+    ...FORNECEDOR,
   },
   {
     codigo: "7891000200201",
@@ -16,6 +22,7 @@ const ITENS_ABAIXO_DO_MINIMO = [
     quantidade: 2,
     unidade: "un",
     minimo: 6,
+    ...FORNECEDOR,
   },
   {
     codigo: "7891000300309",
@@ -23,6 +30,7 @@ const ITENS_ABAIXO_DO_MINIMO = [
     quantidade: 4,
     unidade: "kg",
     minimo: 8,
+    ...FORNECEDOR,
   },
 ];
 
@@ -48,7 +56,10 @@ export default function TelaPainel({ navigation }) {
             </View>
 
             {ehDono && (
-              <Pressable style={estilos.botao}>
+              <Pressable
+                style={estilos.botao}
+                onPress={() => pedirReposicaoNoWhatsApp(item)}
+              >
                 <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
               </Pressable>
             )}
