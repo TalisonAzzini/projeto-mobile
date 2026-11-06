@@ -1,21 +1,20 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
-  Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { useUsuario } from "../contexts/UsuarioContext";
 import { useTema } from "../contexts/TemaContext";
+import { useUsuario } from "../contexts/UsuarioContext";
 import { listarProdutos } from "../services/produtos";
+import { pedirReposicaoNoWhatsApp } from "../services/whatsapp";
 
-function formatarQuantidade(quantidade) {
-  return String(quantidade).replace(".", ",");
+function formatarNumero(valor) {
+  return Number(valor).toLocaleString("pt-BR", { maximumFractionDigits: 3 });
 }
 
 export default function TelaPainel({ navigation }) {
@@ -47,21 +46,6 @@ export default function TelaPainel({ navigation }) {
       carregarProdutos();
     }, [carregarProdutos]),
   );
-
-  async function abrirWhatsApp() {
-    try {
-      await Linking.openURL("whatsapp://");
-    } catch {
-      try {
-        await Linking.openURL("https://wa.me/");
-      } catch {
-        Alert.alert(
-          "Não foi possível abrir o WhatsApp",
-          "Confira se o WhatsApp está instalado no telefone e tente novamente.",
-        );
-      }
-    }
-  }
 
   return (
     <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
@@ -116,17 +100,16 @@ export default function TelaPainel({ navigation }) {
                   temaEscuro && estilos.textoSecundarioEscuro,
                 ]}
               >
-                {formatarQuantidade(item.quantidade)} {item.unidade} · mín.{" "}
-                {formatarQuantidade(item.minimo)} {item.unidade}
+                {formatarNumero(item.quantidade)} {item.unidade} · mín.{" "}
+                {formatarNumero(item.minimo)} {item.unidade}
               </Text>
             </View>
 
             {ehDono && (
               <Pressable
                 style={estilos.botao}
-                onPress={abrirWhatsApp}
+                onPress={() => pedirReposicaoNoWhatsApp(item)}
                 accessibilityRole="button"
-                accessibilityLabel={`Pedir ${item.nome} no WhatsApp do fornecedor`}
               >
                 <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
               </Pressable>
