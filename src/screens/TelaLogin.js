@@ -1,232 +1,288 @@
-import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
+  View,
+  Text,
+  TextInput,
   Pressable,
   StyleSheet,
-  Text,
-  View,
+  ActivityIndicator,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
-import { useTema } from "../contexts/TemaContext";
+import { StatusBar } from "expo-status-bar";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { useUsuario } from "../contexts/UsuarioContext";
-import { listarProdutos } from "../services/produtos";
-import { pedirReposicaoNoWhatsApp } from "../services/whatsapp";
+import TelaComTeclado from "../components/TelaComTeclado";
+import { useTema } from "../contexts/TemaContext";
+import {
+  autenticarUsuario,
+  reenviarConfirmacaoEmail,
+  traduzirErroAutenticacao,
+} from "../services/autenticacao";
 
-function formatarNumero(valor) {
-  return Number(valor).toLocaleString("pt-BR", { maximumFractionDigits: 3 });
-}
-
-export default function TelaPainel({ navigation }) {
-  const { usuario } = useUsuario();
-  const { temaEscuro } = useTema();
-  const ehDono = usuario?.perfil === "dono";
-  const [produtosBaixos, setProdutosBaixos] = useState([]);
-  const [carregando, setCarregando] = useState(true);
+export default function TelaLogin() {
+  const { temaEscuro, alternarTema } = useTema();
+  const { entrar } = useUsuario();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [emailNaoConfirmado, setEmailNaoConfirmado] = useState(false);
+  const [reenvioCarregando, setReenvioCarregando] = useState(false);
+  const [mensagemReenvio, setMensagemReenvio] = useState("");
+  const podeEntrar = email.trim().length > 0 && senha.length > 0;
 
-  const carregarProdutos = useCallback(async () => {
-    setCarregando(true);
+  async function realizarLogin() {
     setErro("");
+    setEmailNaoConfirmado(false);
+    setMensagemReenvio("");
+    setCarregando(true);
 
     try {
-      const produtos = await listarProdutos({ ativos: true });
-      setProdutosBaixos(
-        produtos.filter((item) => item.quantidade <= item.minimo),
-      );
+      const usuarioAutenticado = await autenticarUsuario(email, senha);
+      entrar(usuarioAutenticado);
     } catch (error) {
-      setErro(error.message || "Não foi possível carregar o painel.");
+      const naoConfirmado =
+        error.code === "email_not_confirmed" ||
+        error.message?.toLowerCase().includes("email not confirmed");
+      setEmailNaoConfirmado(naoConfirmado);
+      setErro(traduzirErroAutenticacao(error));
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }
 
-  useFocusEffect(
-    useCallback(() => {
-      carregarProdutos();
-    }, [carregarProdutos]),
-  );
+  async function reenviarEmail() {
+    setMensagemReenvio("");
+    setReenvioCarregando(true);
+
+    try {
+      await reenviarConfirmacaoEmail(email);
+      setMensagemReenvio("E-mail de confirmação enviado. Verifique sua caixa de entrada.");
+    } catch (error) {
+      setMensagemReenvio(traduzirErroAutenticacao(error));
+    } finally {
+      setReenvioCarregando(false);
+    }
+  }
 
   return (
-    <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
-      <Text style={[estilos.secao, temaEscuro && estilos.textoSecundarioEscuro]}>
-        Abaixo do mínimo
+    <TelaComTeclado>
+    <View
+      style={[
+        estilos.container,
+        temaEscuro && estilos.containerEscuro,
+      ]}
+    >
+      <StatusBar style={temaEscuro ? "light" : "dark"} />
+      <Pressable
+        style={[
+          estilos.botaoTema,
+          temaEscuro && estilos.botaoTemaEscuro,
+        ]}
+        onPress={alternarTema}
+        accessibilityRole="button"
+        accessibilityLabel={
+          temaEscuro ? "Mudar para tema claro" : "Mudar para tema escuro"
+        }
+        hitSlop={8}
+      >
+        <Ionicons
+          name={temaEscuro ? "moon" : "sunny"}
+          size={22}
+          color={temaEscuro ? "#FDE68A" : "#0F766E"}
+        />
+      </Pressable>
+      <Text style={[estilos.titulo, temaEscuro && estilos.textoClaro]}>
+        Estoque da Padaria
+      </Text>
+      <Text style={[estilos.subtitulo, temaEscuro && estilos.textoSecundarioEscuro]}>
+        Entre com a sua conta
       </Text>
 
-      <FlatList
-        data={produtosBaixos}
-        keyExtractor={(item) => String(item.id)}
-        refreshing={carregando}
-        onRefresh={carregarProdutos}
-        ListHeaderComponent={
-          erro ? (
-            <View style={estilos.estadoLista}>
-              <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
-                {erro}
-              </Text>
-              <Pressable onPress={carregarProdutos} accessibilityRole="button">
-                <Text style={estilos.textoAcao}>Tentar novamente</Text>
-              </Pressable>
-            </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          carregando ? (
-            <ActivityIndicator
-              style={estilos.carregando}
-              color="#0F766E"
-              accessibilityLabel="Carregando produtos abaixo do mínimo"
-            />
-          ) : erro ? null : (
+      <Text style={[estilos.rotulo, temaEscuro && estilos.textoSecundarioEscuro]}>
+        E-mail
+      </Text>
+      <TextInput
+        style={[estilos.campo, temaEscuro && estilos.campoEscuro]}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholderTextColor={temaEscuro ? "#94A3B8" : "#6B7280"}
+        selectionColor="#0F766E"
+      />
+
+      <Text style={[estilos.rotulo, temaEscuro && estilos.textoSecundarioEscuro]}>
+        Senha
+      </Text>
+      <TextInput
+        style={[estilos.campo, temaEscuro && estilos.campoEscuro]}
+        value={senha}
+        onChangeText={setSenha}
+        secureTextEntry
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholderTextColor={temaEscuro ? "#94A3B8" : "#6B7280"}
+        selectionColor="#0F766E"
+      />
+
+      {erro ? (
+        <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
+          {erro}
+        </Text>
+      ) : null}
+      {emailNaoConfirmado && (
+        <Pressable
+          onPress={reenviarEmail}
+          disabled={reenvioCarregando || !email.trim()}
+          style={estilos.botaoReenvio}
+        >
+          {reenvioCarregando ? (
+            <ActivityIndicator color="#0F766E" />
+          ) : (
             <Text
               style={[
-                estilos.estadoLista,
-                temaEscuro && estilos.textoSecundarioEscuro,
+                estilos.textoReenvio,
+                temaEscuro && estilos.textoReenvioEscuro,
               ]}
             >
-              Nenhum produto está abaixo do estoque mínimo.
+              Reenviar e-mail de confirmação
             </Text>
-          )
-        }
-        renderItem={({ item }) => (
-          <View style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}>
-            <View style={estilos.dadosProduto}>
-              <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
-                {item.nome}
-              </Text>
-              <Text
-                style={[
-                  estilos.detalhe,
-                  temaEscuro && estilos.textoSecundarioEscuro,
-                ]}
-              >
-                {formatarNumero(item.quantidade)} {item.unidade} · mín.{" "}
-                {formatarNumero(item.minimo)} {item.unidade}
-              </Text>
-            </View>
+          )}
+        </Pressable>
+      )}
+      {mensagemReenvio ? (
+        <Text
+          style={[
+            estilos.mensagemReenvio,
+            temaEscuro && estilos.textoSecundarioEscuro,
+          ]}
+        >
+          {mensagemReenvio}
+        </Text>
+      ) : null}
 
-            {ehDono && (
-              <Pressable
-                style={estilos.botao}
-                onPress={() => pedirReposicaoNoWhatsApp(item)}
-                accessibilityRole="button"
-              >
-                <Text style={estilos.textoBotao}>Pedir no WhatsApp</Text>
-              </Pressable>
-            )}
-          </View>
+      <Pressable
+        style={[
+          estilos.botao,
+          (!podeEntrar || carregando) && estilos.botaoDesativado,
+          temaEscuro && !podeEntrar && estilos.botaoDesativadoEscuro,
+        ]}
+        onPress={realizarLogin}
+        disabled={!podeEntrar || carregando}
+      >
+        {carregando ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={estilos.textoBotao}>Entrar</Text>
         )}
-        ListFooterComponent={
-          ehDono ? (
-            <Pressable
-              style={[estilos.botaoUsuarios, temaEscuro && estilos.cartaoEscuro]}
-              onPress={() => navigation.navigate("Usuarios")}
-              accessibilityRole="button"
-            >
-              <Text style={estilos.textoUsuarios}>Usuários</Text>
-            </Pressable>
-          ) : null
-        }
-      />
+      </Pressable>
     </View>
+    </TelaComTeclado>
   );
 }
 
 const estilos = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 16,
-    paddingHorizontal: 20,
+    justifyContent: "center",
+    padding: 28,
     backgroundColor: "#F6F7F9",
   },
   containerEscuro: {
     backgroundColor: "#101418",
   },
-  secao: {
-    fontSize: 15,
-    color: "#4A5563",
-    marginBottom: 12,
-  },
-  textoSecundarioEscuro: {
-    color: "#CBD5E1",
-  },
-  cartao: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  botaoTema: {
+    position: "absolute",
+    top: 64,
+    right: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#E6F4F1",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#D9DEE5",
-    borderRadius: 8,
-    padding: 14,
-    marginBottom: 12,
-    gap: 12,
+    justifyContent: "center",
   },
-  cartaoEscuro: {
-    backgroundColor: "#1E2933",
-    borderColor: "#334155",
+  botaoTemaEscuro: {
+    backgroundColor: "#263442",
   },
-  dadosProduto: {
-    flex: 1,
-    flexShrink: 1,
-  },
-  nome: {
-    fontSize: 16,
+  titulo: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1B2430",
   },
   textoClaro: {
     color: "#F8FAFC",
   },
-  detalhe: {
+  subtitulo: {
+    fontSize: 15,
+    color: "#4A5563",
+    marginBottom: 24,
+  },
+  textoSecundarioEscuro: {
+    color: "#CBD5E1",
+  },
+  rotulo: {
     fontSize: 13,
     color: "#4A5563",
+    marginBottom: 4,
+  },
+  campo: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: "#8A94A3",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFFFFF",
+    marginBottom: 16,
+  },
+  campoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#475569",
+    color: "#F8FAFC",
   },
   botao: {
-    minHeight: 40,
-    flexShrink: 0,
-    paddingHorizontal: 12,
+    height: 48,
     borderRadius: 8,
-    backgroundColor: "#25D366",
+    backgroundColor: "#0F766E",
     justifyContent: "center",
+    alignItems: "center",
   },
   textoBotao: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  botaoUsuarios: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: "#0F766E",
-    borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  textoUsuarios: {
-    color: "#0F766E",
     fontSize: 16,
     fontWeight: "600",
   },
-  carregando: {
-    marginVertical: 24,
-  },
-  estadoLista: {
-    color: "#4A5563",
-    textAlign: "center",
-    paddingVertical: 24,
-  },
   erro: {
     color: "#B42318",
-    marginBottom: 12,
+    fontSize: 14,
+    marginBottom: 16,
   },
   erroEscuro: {
-    color: "#FDA4AF",
+    color: "#FCA5A5",
   },
-  textoAcao: {
+  botaoReenvio: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  textoReenvio: {
     color: "#0F766E",
     fontSize: 14,
     fontWeight: "600",
+  },
+  textoReenvioEscuro: {
+    color: "#5EEAD4",
+  },
+  mensagemReenvio: {
+    color: "#4A5563",
+    fontSize: 14,
+    marginBottom: 16,
     textAlign: "center",
+  },
+  botaoDesativado: {
+    backgroundColor: "#A0A8B2",
+  },
+  botaoDesativadoEscuro: {
+    backgroundColor: "#475569",
   },
 });
