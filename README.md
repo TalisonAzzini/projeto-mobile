@@ -160,7 +160,7 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 - [x] Repositório no GitHub
 - [x] Login com criptografia da senha
 - [x] Banco de dados (Supabase)
-- [ ] 2 testes unitários simples com `fetch`
+- [x] 2 testes unitários simples com `fetch`
 
 ## Status
 
@@ -180,7 +180,7 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 - [x] Achar o item a partir do código lido pelo Scanner na tela Movimentação
 - [x] Botão "Pedir no WhatsApp" (abre o WhatsApp sem direcionar para um contato específico)
 - [x] Validação ao salvar (data, telefone e quantidades)
-- [ ] Testes unitários
+- [x] Testes unitários
 - [x] Trocar os dados de exemplo das telas por dados do banco
 
 ## Equipe
