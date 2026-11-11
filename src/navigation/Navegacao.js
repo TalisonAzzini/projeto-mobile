@@ -2,7 +2,6 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -15,6 +14,7 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 
 import { useUsuario } from "../contexts/UsuarioContext";
 import { useTema } from "../contexts/TemaContext";
@@ -219,10 +219,7 @@ export default function Navegacao() {
 
   return (
     <NavigationContainer theme={temaEscuro ? DarkTheme : DefaultTheme}>
-      <StatusBar
-        barStyle={temaEscuro ? "light-content" : "dark-content"}
-        backgroundColor={temaEscuro ? "#101418" : "#F6F7F9"}
-      />
+      <StatusBar style={temaEscuro ? "light" : "dark"} />
       <Pilha.Navigator screenOptions={opcoesCabecalho}>
         {usuario ? (
           <>

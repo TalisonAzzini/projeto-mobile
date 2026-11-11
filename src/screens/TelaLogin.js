@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useUsuario } from "../contexts/UsuarioContext";
+import TelaComTeclado from "../components/TelaComTeclado";
 import { useTema } from "../contexts/TemaContext";
 import {
   autenticarUsuario,
@@ -65,6 +66,7 @@ export default function TelaLogin() {
   }
 
   return (
+    <TelaComTeclado>
     <View
       style={[
         estilos.container,
@@ -180,6 +182,7 @@ export default function TelaLogin() {
         )}
       </Pressable>
     </View>
+    </TelaComTeclado>
   );
 }
 
