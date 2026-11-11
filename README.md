@@ -160,7 +160,7 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 - [x] Repositório no GitHub
 - [x] Login com criptografia da senha
 - [x] Banco de dados (Supabase)
-- [ ] 2 testes unitários simples com `fetch`
+- [x] 2 testes unitários simples com `fetch`
 
 ## Status
 

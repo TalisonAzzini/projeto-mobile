@@ -5,6 +5,7 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
@@ -89,9 +90,12 @@ export default function TelaLogin() {
           color={temaEscuro ? "#FDE68A" : "#0F766E"}
         />
       </Pressable>
-      <Text style={[estilos.titulo, temaEscuro && estilos.textoClaro]}>
-        Estoque da Padaria
-      </Text>
+      <Image
+        source={require("../../assets/logo.png")}
+        style={estilos.logo}
+        resizeMode="contain"
+        accessibilityLabel="Logo da padaria"
+      />
       <Text style={[estilos.subtitulo, temaEscuro && estilos.textoSecundarioEscuro]}>
         Entre com a sua conta
       </Text>
@@ -203,18 +207,17 @@ const estilos = StyleSheet.create({
   botaoTemaEscuro: {
     backgroundColor: "#263442",
   },
-  titulo: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1B2430",
-  },
-  textoClaro: {
-    color: "#F8FAFC",
+  logo: {
+    width: 280,
+    height: 163,
+    alignSelf: "center",
+    marginBottom: 20,
   },
   subtitulo: {
     fontSize: 15,
     color: "#4A5563",
     marginBottom: 24,
+    textAlign: "center",
   },
   textoSecundarioEscuro: {
     color: "#CBD5E1",
