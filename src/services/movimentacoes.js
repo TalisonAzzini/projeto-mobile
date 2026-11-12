@@ -1,6 +1,8 @@
 import { listarProdutos } from "./produtos";
 import { supabase } from "./supabase";
 
+export const CODIGO_ERRO_PRODUTO_NAO_CADASTRADO = "PRODUTO_NAO_CADASTRADO";
+
 function traduzirErroMovimentacao(error) {
   const codigo = String(error?.code ?? "");
   const mensagem = String(error?.message ?? "").toLowerCase();
@@ -179,9 +181,20 @@ export async function buscarProdutoPorCodigo(codigo) {
   const produto = produtos.find((item) => item.codigo === codigoNormalizado);
 
   if (!produto) {
-    throw new Error(
+    const produtosInativos = await listarProdutos({ ativos: false });
+    const produtoInativo = produtosInativos.find(
+      (item) => item.codigo === codigoNormalizado,
+    );
+
+    if (produtoInativo) {
+      throw new Error("O produto está inativo e não pode ser movimentado.");
+    }
+
+    const erro = new Error(
       "Nenhum produto ativo foi encontrado com esse código de barras.",
     );
+    erro.code = CODIGO_ERRO_PRODUTO_NAO_CADASTRADO;
+    throw erro;
   }
 
   return produto;

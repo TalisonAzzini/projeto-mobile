@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import Campo from "../components/Campo";
+import TelaComTeclado from "../components/TelaComTeclado";
 import { useTema } from "../contexts/TemaContext";
 import {
   cadastrarFuncionario,
@@ -27,6 +29,63 @@ export default function TelaUsuarios() {
   const [erroLista, setErroLista] = useState("");
   const [erroCadastro, setErroCadastro] = useState("");
   const [mensagemSucesso, setMensagemSucesso] = useState("");
+  const [alturaTeclado, setAlturaTeclado] = useState(0);
+  const emailRef = useRef(null);
+  const senhaRef = useRef(null);
+  const listaRef = useRef(null);
+  const containerListaRef = useRef(null);
+  const campoFocadoRef = useRef(null);
+  const tecladoVisivelRef = useRef(false);
+  const topoTecladoRef = useRef(null);
+  const deslocamentoRolagemRef = useRef(0);
+
+  const rolarAteCampo = useCallback(() => {
+    const campo = campoFocadoRef.current;
+    const topoTeclado = topoTecladoRef.current;
+    const lista = listaRef.current;
+    const containerLista = containerListaRef.current;
+    if (!campo || !lista || !containerLista || topoTeclado == null) return;
+
+    campo.measureInWindow((_campoX, campoY, _campoLargura, campoAltura) => {
+      containerLista.measureInWindow((_listaX, listaY, _listaLargura, listaAltura) => {
+        const limiteVisivel = Math.min(listaY + listaAltura, topoTeclado) - 72;
+        const quantoRolar = campoY + campoAltura - limiteVisivel;
+
+        if (quantoRolar > 0) {
+          lista.scrollToOffset({
+            offset: deslocamentoRolagemRef.current + quantoRolar,
+            animated: true,
+          });
+        }
+      });
+    });
+  }, []);
+
+  function aoFocarCampo(campo) {
+    campoFocadoRef.current = campo;
+    if (tecladoVisivelRef.current) {
+      setTimeout(rolarAteCampo, 100);
+    }
+  }
+
+  useEffect(() => {
+    const mostrar = Keyboard.addListener("keyboardDidShow", (event) => {
+      tecladoVisivelRef.current = true;
+      setAlturaTeclado(event.endCoordinates.height);
+      topoTecladoRef.current = event.endCoordinates.screenY;
+      setTimeout(rolarAteCampo, 150);
+    });
+    const esconder = Keyboard.addListener("keyboardDidHide", () => {
+      tecladoVisivelRef.current = false;
+      setAlturaTeclado(0);
+      topoTecladoRef.current = null;
+    });
+
+    return () => {
+      mostrar.remove();
+      esconder.remove();
+    };
+  }, [rolarAteCampo]);
 
   const carregarFuncionarios = useCallback(async () => {
     setCarregando(true);
@@ -119,6 +178,10 @@ export default function TelaUsuarios() {
         rotulo="Nome"
         value={form.nome}
         onChangeText={(valor) => alterar("nome", valor)}
+        onFocus={aoFocarCampo}
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => emailRef.current?.focus()}
         maxLength={60}
         editable={!salvando}
       />
@@ -126,6 +189,11 @@ export default function TelaUsuarios() {
         rotulo="E-mail"
         value={form.email}
         onChangeText={(valor) => alterar("email", valor)}
+        onFocus={aoFocarCampo}
+        inputRef={emailRef}
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => senhaRef.current?.focus()}
         keyboardType="email-address"
         autoCapitalize="none"
         autoCorrect={false}
@@ -140,6 +208,9 @@ export default function TelaUsuarios() {
         rotulo="Senha"
         value={form.senha}
         onChangeText={(valor) => alterar("senha", valor)}
+        onFocus={aoFocarCampo}
+        inputRef={senhaRef}
+        returnKeyType="done"
         placeholder="Mínimo de 6 caracteres"
         secureTextEntry
         autoCapitalize="none"
@@ -181,52 +252,66 @@ export default function TelaUsuarios() {
   );
 
   return (
-    <FlatList
-      style={[estilos.lista, temaEscuro && estilos.listaEscura]}
-      contentContainerStyle={[
-        estilos.conteudo,
-        temaEscuro && estilos.conteudoEscuro,
-      ]}
-      data={funcionarios}
-      keyExtractor={(item) => item.id}
-      ListHeaderComponent={cabecalho}
-      ListFooterComponent={formulario}
-      ListEmptyComponent={
-        carregando ? (
-          <ActivityIndicator
-            style={estilos.carregando}
-            color="#0F766E"
-            accessibilityLabel="Carregando funcionários"
-          />
-        ) : erroLista ? null : (
-          <Text style={[estilos.listaVazia, temaEscuro && estilos.textoSecundarioEscuro]}>
-            Nenhum funcionário cadastrado.
-          </Text>
-        )
-      }
-      refreshing={carregando}
-      onRefresh={carregarFuncionarios}
-      keyboardShouldPersistTaps="handled"
-      renderItem={({ item }) => (
-        <View style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}>
-          <View>
-            <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
-              {item.nome}
-            </Text>
-            <Text style={[estilos.detalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
-              {item.email}
-            </Text>
-          </View>
-          <Text style={[estilos.perfil, temaEscuro && estilos.textoSecundarioEscuro]}>
-            Funcionário
-          </Text>
-        </View>
-      )}
-    />
+    <TelaComTeclado>
+      <View ref={containerListaRef} style={estilos.containerLista}>
+        <FlatList
+          ref={listaRef}
+          style={[estilos.lista, temaEscuro && estilos.listaEscura]}
+          contentContainerStyle={[
+            estilos.conteudo,
+            temaEscuro && estilos.conteudoEscuro,
+            { paddingBottom: alturaTeclado > 0 ? alturaTeclado + 24 : 32 },
+          ]}
+          data={funcionarios}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={cabecalho}
+          ListFooterComponent={formulario}
+          ListEmptyComponent={
+            carregando ? (
+              <ActivityIndicator
+                style={estilos.carregando}
+                color="#0F766E"
+                accessibilityLabel="Carregando funcionários"
+              />
+            ) : erroLista ? null : (
+              <Text style={[estilos.listaVazia, temaEscuro && estilos.textoSecundarioEscuro]}>
+                Nenhum funcionário cadastrado.
+              </Text>
+            )
+          }
+          refreshing={carregando}
+          onRefresh={carregarFuncionarios}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            deslocamentoRolagemRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          renderItem={({ item }) => (
+            <View style={[estilos.cartao, temaEscuro && estilos.cartaoEscuro]}>
+              <View>
+                <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
+                  {item.nome}
+                </Text>
+                <Text style={[estilos.detalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
+                  {item.email}
+                </Text>
+              </View>
+              <Text style={[estilos.perfil, temaEscuro && estilos.textoSecundarioEscuro]}>
+                Funcionário
+              </Text>
+            </View>
+          )}
+        />
+      </View>
+    </TelaComTeclado>
   );
 }
 
 const estilos = StyleSheet.create({
+  containerLista: {
+    flex: 1,
+  },
   lista: {
     flex: 1,
     backgroundColor: "#F6F7F9",

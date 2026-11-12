@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 import { useTema } from "../contexts/TemaContext";
 
-export default function Campo({ rotulo, onFocus, ...resto }) {
+export default function Campo({ rotulo, onFocus, inputRef, ...resto }) {
   const { temaEscuro } = useTema();
   const campoRef = useRef(null);
 
@@ -12,7 +12,14 @@ export default function Campo({ rotulo, onFocus, ...resto }) {
         {rotulo}
       </Text>
       <TextInput
-        ref={campoRef}
+        ref={(campo) => {
+          campoRef.current = campo;
+          if (typeof inputRef === "function") {
+            inputRef(campo);
+          } else if (inputRef) {
+            inputRef.current = campo;
+          }
+        }}
         onFocus={(event) => onFocus?.(campoRef.current, event)}
         style={[
           estilos.campo,
