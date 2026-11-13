@@ -31,10 +31,18 @@ export default function TelaItem({ navigation, route }) {
   const somenteLeitura = usuario?.perfil !== "dono";
 
   const item = route.params?.item;
+  const codigoRef = useRef(null);
+  const unidadeRef = useRef(null);
+  const quantidadeRef = useRef(null);
+  const minimoRef = useRef(null);
+  const precoRef = useRef(null);
+  const validadeRef = useRef(null);
+  const fornecedorRef = useRef(null);
+  const telefoneRef = useRef(null);
 
   const [form, setForm] = useState({
     nome: item?.nome ?? "",
-    codigo: item?.codigo ?? "",
+    codigo: item?.codigo ?? route.params?.codigo ?? "",
     unidade: item?.unidade ?? "",
     quantidade: item ? String(item.quantidade).replace(".", ",") : "",
     minimo: item ? String(item.minimo).replace(".", ",") : "",
@@ -251,10 +259,14 @@ export default function TelaItem({ navigation, route }) {
           }}
         >
           <Campo
-            rotulo="Nome"
+            rotulo="Nome do Produto"
             value={form.nome}
             onChangeText={(v) => alterar("nome", v)}
             onFocus={aoFocarCampo}
+            placeholder="Ex.: Farinha de trigo"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => codigoRef.current?.focus()}
             editable={!somenteLeitura && !salvando && !inativando}
           />
           <Campo
@@ -262,6 +274,11 @@ export default function TelaItem({ navigation, route }) {
             value={form.codigo}
             onChangeText={(v) => alterar("codigo", v)}
             onFocus={aoFocarCampo}
+            inputRef={codigoRef}
+            placeholder="Ex.: 7891234567890"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => unidadeRef.current?.focus()}
             keyboardType="numeric"
             editable={!somenteLeitura && !salvando && !inativando}
           />
@@ -270,6 +287,11 @@ export default function TelaItem({ navigation, route }) {
             value={form.unidade}
             onChangeText={(v) => alterar("unidade", v)}
             onFocus={aoFocarCampo}
+            inputRef={unidadeRef}
+            placeholder="Ex.: kg"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => quantidadeRef.current?.focus()}
             editable={!somenteLeitura && !salvando && !inativando}
           />
           <Campo
@@ -277,6 +299,11 @@ export default function TelaItem({ navigation, route }) {
             value={form.quantidade}
             onChangeText={(v) => alterar("quantidade", v)}
             onFocus={aoFocarCampo}
+            inputRef={quantidadeRef}
+            placeholder="Ex.: 10"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => minimoRef.current?.focus()}
             keyboardType="decimal-pad"
             editable={!somenteLeitura && !salvando && !inativando}
           />
@@ -285,6 +312,11 @@ export default function TelaItem({ navigation, route }) {
             value={form.minimo}
             onChangeText={(v) => alterar("minimo", v)}
             onFocus={aoFocarCampo}
+            inputRef={minimoRef}
+            placeholder="Ex.: 2"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => precoRef.current?.focus()}
             keyboardType="decimal-pad"
             editable={!somenteLeitura && !salvando && !inativando}
           />
@@ -293,6 +325,10 @@ export default function TelaItem({ navigation, route }) {
             value={form.preco}
             onChangeText={(v) => alterar("preco", v.replace(/[^\d.,]/g, ""))}
             onFocus={aoFocarCampo}
+            inputRef={precoRef}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => validadeRef.current?.focus()}
             keyboardType="decimal-pad"
             placeholder="Ex.: 12,50"
             editable={!somenteLeitura && !salvando && !inativando}
@@ -302,6 +338,10 @@ export default function TelaItem({ navigation, route }) {
             value={form.validade}
             onChangeText={(v) => alterar("validade", formatarData(v))}
             onFocus={aoFocarCampo}
+            inputRef={validadeRef}
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => fornecedorRef.current?.focus()}
             placeholder="dd/mm/aaaa"
             keyboardType="numeric"
             maxLength={10}
@@ -312,6 +352,11 @@ export default function TelaItem({ navigation, route }) {
             value={form.fornecedor}
             onChangeText={(v) => alterar("fornecedor", v)}
             onFocus={aoFocarCampo}
+            inputRef={fornecedorRef}
+            placeholder="Ex.: Distribuidora ABC"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => telefoneRef.current?.focus()}
             editable={!somenteLeitura && !salvando && !inativando}
           />
           <Campo
@@ -319,6 +364,9 @@ export default function TelaItem({ navigation, route }) {
             value={form.telefone}
             onChangeText={(v) => alterar("telefone", formatarTelefone(v))}
             onFocus={aoFocarCampo}
+            inputRef={telefoneRef}
+            placeholder="Ex.: (11) 99999-9999"
+            returnKeyType="done"
             keyboardType="phone-pad"
             maxLength={15}
             editable={!somenteLeitura && !salvando && !inativando}
