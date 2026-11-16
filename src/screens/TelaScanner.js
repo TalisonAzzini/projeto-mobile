@@ -1,21 +1,78 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet, Linking } from "react-native";
+import {
+  Alert,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Linking,
+} from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Campo from "../components/Campo";
 import { useTema } from "../contexts/TemaContext";
+import { useUsuario } from "../contexts/UsuarioContext";
+import {
+  buscarProdutoPorCodigo,
+  CODIGO_ERRO_PRODUTO_NAO_CADASTRADO,
+} from "../services/movimentacoes";
 
 export default function TelaScanner({ navigation }) {
   const { temaEscuro } = useTema();
+  const { usuario } = useUsuario();
   const [permissao, pedirPermissao] = useCameraPermissions();
   const [codigo, setCodigo] = useState("");
   const [digitando, setDigitando] = useState(false);
   const [texto, setTexto] = useState("");
 
-  function usarCodigo(valor) {
+  function enviarParaMovimentacao(valor) {
     navigation.navigate("Abas", {
       screen: "Movimentacao",
       params: { codigo: valor },
     });
+  }
+
+  async function usarCodigo(valor) {
+    try {
+      await buscarProdutoPorCodigo(valor);
+      enviarParaMovimentacao(valor);
+    } catch (error) {
+      if (
+        error.code === CODIGO_ERRO_PRODUTO_NAO_CADASTRADO &&
+        usuario?.perfil === "dono"
+      ) {
+        Alert.alert(
+          "Atenção",
+          "Produto não cadastrado. Deseja realizar o cadastro?",
+          [
+            {
+              text: "Sim",
+              onPress: () => {
+                setCodigo("");
+                setTexto("");
+                setDigitando(false);
+                navigation.navigate("Item", { codigo: valor });
+                Alert.alert(
+                  "Cadastro de produto",
+                  "Por favor, realize o cadastro",
+                );
+              },
+            },
+            {
+              text: "Não",
+              style: "cancel",
+              onPress: () => {
+                setCodigo("");
+                setTexto("");
+                setDigitando(false);
+              },
+            },
+          ],
+        );
+        return;
+      }
+
+      enviarParaMovimentacao(valor);
+    }
   }
   const codigoDigitado = texto.replace(/\s/g, "");
 

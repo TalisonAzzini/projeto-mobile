@@ -48,12 +48,15 @@ export default function TelaPainel({ navigation }) {
     }, [carregarProdutos]),
   );
 
+  const resumoTexto =
+    produtosBaixos.length === 0
+      ? "Tudo em dia"
+      : produtosBaixos.length === 1
+        ? "1 item em alerta"
+        : `${produtosBaixos.length} itens em alerta`;
+
   return (
     <View style={[estilos.container, temaEscuro && estilos.containerEscuro]}>
-      <Text style={[estilos.secao, temaEscuro && estilos.textoSecundarioEscuro]}>
-        Abaixo do mínimo
-      </Text>
-
       <FlatList
         data={produtosBaixos}
         keyExtractor={(item) => String(item.id)}
@@ -61,16 +64,83 @@ export default function TelaPainel({ navigation }) {
         onRefresh={carregarProdutos}
         contentContainerStyle={estilos.lista}
         ListHeaderComponent={
-          erro ? (
-            <View style={estilos.estadoLista}>
-              <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
-                {erro}
-              </Text>
-              <Pressable onPress={carregarProdutos} accessibilityRole="button">
-                <Text style={estilos.textoAcao}>Tentar novamente</Text>
-              </Pressable>
+          <>
+            <View
+              style={[estilos.cardResumo, temaEscuro && estilos.cardResumoEscuro]}
+            >
+              <View style={estilos.cabecalhoResumo}>
+                <View>
+                  <Text
+                    style={[
+                      estilos.eyebrow,
+                      temaEscuro && estilos.textoSecundarioEscuro,
+                    ]}
+                  >
+                    Painel de estoque
+                  </Text>
+                  <Text style={[estilos.titulo, temaEscuro && estilos.textoClaro]}>
+                    Abaixo do mínimo
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    estilos.badgeResumo,
+                    produtosBaixos.length === 0
+                      ? estilos.badgeSucesso
+                      : estilos.badgeAlerta,
+                  ]}
+                >
+                  <Text style={estilos.badgeTexto}>{produtosBaixos.length}</Text>
+                </View>
+              </View>
+
+              <View style={estilos.gridResumo}>
+                <View
+                  style={[estilos.blocoResumo, temaEscuro && estilos.blocoResumoEscuro]}
+                >
+                  <Text
+                    style={[
+                      estilos.rotuloResumo,
+                      temaEscuro && estilos.textoSecundarioEscuro,
+                    ]}
+                  >
+                    Status
+                  </Text>
+                  <Text style={[estilos.valorResumo, temaEscuro && estilos.textoClaro]}>
+                    {resumoTexto}
+                  </Text>
+                </View>
+
+                <View
+                  style={[estilos.blocoResumo, temaEscuro && estilos.blocoResumoEscuro]}
+                >
+                  <Text
+                    style={[
+                      estilos.rotuloResumo,
+                      temaEscuro && estilos.textoSecundarioEscuro,
+                    ]}
+                  >
+                    Ação
+                  </Text>
+                  <Text style={[estilos.valorResumo, temaEscuro && estilos.textoClaro]}>
+                    {produtosBaixos.length === 0 ? "Revisar depois" : "Reabastecer"}
+                  </Text>
+                </View>
+              </View>
             </View>
-          ) : null
+
+            {erro ? (
+              <View style={estilos.estadoLista}>
+                <Text style={[estilos.erro, temaEscuro && estilos.erroEscuro]}>
+                  {erro}
+                </Text>
+                <Pressable onPress={carregarProdutos} accessibilityRole="button">
+                  <Text style={estilos.textoAcao}>Tentar novamente</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </>
         }
         ListEmptyComponent={
           carregando ? (
@@ -80,14 +150,23 @@ export default function TelaPainel({ navigation }) {
               accessibilityLabel="Carregando produtos abaixo do mínimo"
             />
           ) : erro ? null : (
-            <Text
-              style={[
-                estilos.estadoLista,
-                temaEscuro && estilos.textoSecundarioEscuro,
-              ]}
-            >
-              Nenhum produto está abaixo do estoque mínimo.
-            </Text>
+            <View style={estilos.estadoVazio}>
+              <View style={[estilos.iconeVazio, temaEscuro && estilos.iconeVazioEscuro]}>
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={28}
+                  color={temaEscuro ? "#5EEAD4" : "#0F766E"}
+                />
+              </View>
+              <Text
+                style={[
+                  estilos.textoEstadoVazio,
+                  temaEscuro && estilos.textoSecundarioEscuro,
+                ]}
+              >
+                Nenhum produto está abaixo do estoque mínimo.
+              </Text>
+            </View>
           )
         }
         renderItem={({ item }) => (
@@ -104,15 +183,23 @@ export default function TelaPainel({ navigation }) {
               <Text style={[estilos.nome, temaEscuro && estilos.textoClaro]}>
                 {item.nome}
               </Text>
-              <Text
-                style={[
-                  estilos.detalhe,
-                  temaEscuro && estilos.textoSecundarioEscuro,
-                ]}
-              >
-                {formatarNumero(item.quantidade)} {item.unidade} · mín.{" "}
-                {formatarNumero(item.minimo)} {item.unidade}
-              </Text>
+
+              <View style={estilos.linhaDetalhes}>
+                <View style={[estilos.badgeEstoque, temaEscuro && estilos.badgeEstoqueEscuro]}>
+                  <Text
+                    style={[
+                      estilos.badgeEstoqueTexto,
+                      temaEscuro && estilos.badgeEstoqueTextoEscuro,
+                    ]}
+                  >
+                    {formatarNumero(item.quantidade)} {item.unidade}
+                  </Text>
+                </View>
+
+                <Text style={[estilos.detalhe, temaEscuro && estilos.textoSecundarioEscuro]}>
+                  mín. {formatarNumero(item.minimo)} {item.unidade}
+                </Text>
+              </View>
             </View>
 
             {ehDono && (
@@ -132,7 +219,7 @@ export default function TelaPainel({ navigation }) {
             <Pressable
               style={({ pressed }) => [
                 estilos.botaoUsuarios,
-                temaEscuro && estilos.cartaoEscuro,
+                temaEscuro && estilos.botaoUsuariosEscuro,
                 pressed && estilos.botaoPressionado,
               ]}
               onPress={() => navigation.navigate("Usuarios")}
@@ -295,5 +382,136 @@ const estilos = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     textAlign: "center",
+  },
+  cardResumo: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#E7ECF3",
+    padding: 18,
+    marginBottom: 18,
+    ...sombraSuave,
+  },
+  cardResumoEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  cabecalhoResumo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  eyebrow: {
+    fontSize: 12,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "#64748B",
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  titulo: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  badgeResumo: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeSucesso: {
+    backgroundColor: "#DCFCE7",
+  },
+  badgeAlerta: {
+    backgroundColor: "#FEE2E2",
+  },
+  badgeTexto: {
+    color: "#0F172A",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  gridResumo: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  blocoResumo: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    padding: 12,
+    minHeight: 74,
+    justifyContent: "center",
+  },
+  blocoResumoEscuro: {
+    backgroundColor: "#0F172A",
+  },
+  rotuloResumo: {
+    fontSize: 12,
+    color: "#64748B",
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  valorResumo: {
+    fontSize: 14,
+    color: "#0F172A",
+    fontWeight: "700",
+  },
+  linhaDetalhes: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  badgeEstoque: {
+    backgroundColor: "#ECFDF5",
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  badgeEstoqueEscuro: {
+    backgroundColor: "#123E39",
+  },
+  badgeEstoqueTexto: {
+    fontSize: 12,
+    color: "#065F46",
+    fontWeight: "700",
+  },
+  badgeEstoqueTextoEscuro: {
+    color: "#99F6E4",
+  },
+  estadoVazio: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+  },
+  iconeVazio: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: "#D1FAE5",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  iconeVazioEscuro: {
+    backgroundColor: "#102C35",
+  },
+  textoEstadoVazio: {
+    textAlign: "center",
+    color: "#4A5563",
+    maxWidth: 260,
+    lineHeight: 18,
+    fontSize: 14,
+  },
+  botaoUsuariosEscuro: {
+    backgroundColor: "#1E2933",
+    borderColor: "#334155",
+    shadowOpacity: 0,
+    elevation: 0,
   },
 });

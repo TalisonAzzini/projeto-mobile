@@ -9,7 +9,8 @@ export default function TelaComTeclado({ children }) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      enabled={Platform.OS === "ios"}
       keyboardVerticalOffset={alturaCabecalho}
     >
       {children}
