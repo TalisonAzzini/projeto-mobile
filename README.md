@@ -185,7 +185,43 @@ Login ──(entrar)──> Abas: Painel | Estoque | Movimentação | Histórico
 
 ## Equipe
 
-- Talison Rodrigues
-- Gabriel Luciano
-- Igor Henrique
-- Leandro Brene
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="https://github.com/TalisonAzzini.png" width="100px;" alt="Talison Rodrigues" style="border-radius: 50%; border: 2px solid #5d2f8e;"/>
+      <br />
+      <sub><b>Talison Rodrigues</b></sub>
+      <br /><br />
+      <a href="https://github.com/TalisonAzzini" target="_blank" rel="noopener noreferrer">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+      </a>
+    </td>
+    <td align="center">
+      <img src="https://github.com/brene01.png" width="100px;" alt="Leandro Brene" style="border-radius: 50%; border: 2px solid #5d2f8e;"/>
+      <br />
+      <sub><b>Leandro Brene</b></sub>
+      <br /><br />
+      <a href="https://github.com/brene01" target="_blank" rel="noopener noreferrer">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+      </a>
+    </td>
+    <td align="center">
+      <img src="https://github.com/Gab-sz.png" width="100px;" alt="Gabriel Luciano" style="border-radius: 50%; border: 2px solid #5d2f8e;"/>
+      <br />
+      <sub><b>Gabriel Luciano</b></sub>
+      <br /><br />
+      <a href="https://github.com/Gab-sz" target="_blank" rel="noopener noreferrer">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+      </a>
+    </td>
+    <td align="center">
+      <img src="https://github.com/iggorhenri-tech.png" width="100px;" alt="Igor Henrique" style="border-radius: 50%; border: 2px solid #5d2f8e;"/>
+      <br />
+      <sub><b>Igor Henrique</b></sub>
+      <br /><br />
+      <a href="https://github.com/iggorhenri-tech" target="_blank" rel="noopener noreferrer">
+        <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
+      </a>
+    </td>
+  </tr>
+</table>
