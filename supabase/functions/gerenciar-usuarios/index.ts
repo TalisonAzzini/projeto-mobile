@@ -142,14 +142,17 @@ Deno.serve(async (requisicao) => {
 
   const { error: erroSalvarPerfil } = await clienteAdmin
     .from("usuarios")
-    .insert({
-      id: data.user.id,
-      nome,
-      cargo: "funcionario",
-      ativo: true,
-      email,
-      perfil: "funcionario",
-    });
+    .upsert(
+      {
+        id: data.user.id,
+        nome,
+        cargo: "funcionario",
+        ativo: true,
+        email,
+        perfil: "funcionario",
+      },
+      { onConflict: "id" },
+    );
 
   if (erroSalvarPerfil) {
     const { error: erroReverterCadastro } =
